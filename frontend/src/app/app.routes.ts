@@ -25,7 +25,11 @@ export const routes: Routes = [
       import('./features/admin/admin.routes').then(m => m.adminRoutes),
   },
 
-  { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./features/landing/landing.component').then(m => m.LandingComponent),
+  },
   {
     path: '**',
     loadComponent: () =>

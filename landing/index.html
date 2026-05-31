@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expensly — Gestión de gastos corporativos para empresas panameñas</title>
+<meta name="description" content="Expensly automatiza la gestión de gastos corporativos desde la compra hasta la conciliación bancaria, con validez legal ante la DGI.">
+
+<!-- Single Google Fonts import: Plus Jakarta Sans (headings) + Inter (body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     DESIGN TOKENS
+  ───────────────────────────────────────────────────────────── */
+  :root {
+    --blue:        #2563EB;
+    --blue-hover:  #1D4ED8;
+    --dark:        #0F172A;
+    --muted:       #64748B;
+    --border:      #E2E8F0;
+    --surface:     #F8FAFC;
+    --white:       #FFFFFF;
+    --success:     #10B981;
+    --warning:     #F59E0B;
+
+    --dgi-bg:      #DCFCE7;
+    --dgi-text:    #15803D;
+    --alert-bg:    #FEF9C3;
+    --alert-text:  #92400E;
+
+    --shadow-soft: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    --shadow-card: 0 10px 30px rgba(15,23,42,0.10), 0 2px 8px rgba(15,23,42,0.05);
+
+    --r-card:  12px;
+    --r-badge: 8px;
+    --r-input: 6px;
+    --r-pill:  999px;
+
+    --font-head: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+
+    --maxw: 1180px;
+    --pad-section: 96px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--dark);
+    background: var(--white);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-head);
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    margin: 0;
+    color: var(--dark);
+  }
+
+  p  { margin: 0; }
+  a  { color: inherit; text-decoration: none; }
+  ul { margin: 0; padding: 0; list-style: none; }
+
+  .wrap {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .overline {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .overline.blue { color: var(--blue); }
+
+  section { padding: var(--pad-section) 0; }
+
+  .section-head { text-align: center; max-width: 640px; margin: 0 auto 56px; }
+  .section-head h2 {
+    font-size: clamp(28px, 3.6vw, 40px);
+    font-weight: 800;
+    margin: 12px 0 14px;
+  }
+  .section-head p { color: var(--muted); font-size: 17px; }
+
+  /* ─────────────────────────────────────────────────────────────
+     BUTTONS
+  ───────────────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 15px;
+    border: 1px solid transparent;
+    border-radius: var(--r-badge);
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease, border-color 150ms ease, transform 150ms ease;
+    white-space: nowrap;
+  }
+  .btn-primary  { background: var(--blue); color: #fff; }
+  .btn-primary:hover { background: var(--blue-hover); }
+  .btn-ghost    { background: transparent; color: var(--dark); }
+  .btn-ghost:hover { color: var(--blue); }
+  .btn-outline  { background: #fff; color: var(--blue); border-color: var(--border); }
+  .btn-outline:hover { border-color: var(--blue); }
+  .btn-pill     { border-radius: var(--r-pill); }
+  .btn-block    { width: 100%; }
+
+  /* ─────────────────────────────────────────────────────────────
+     NAVBAR
+  ───────────────────────────────────────────────────────────── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 64px;
+    background: rgba(255,255,255,0.85);
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms ease, box-shadow 200ms ease, backdrop-filter 200ms ease;
+  }
+  .nav.scrolled {
+    border-bottom-color: var(--border);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .nav-inner {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .logo {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.03em;
+    color: var(--dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo .mark { color: var(--blue); }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color 150ms ease;
+  }
+  .nav-links a:hover { color: var(--dark); }
+  .nav-actions { display: flex; align-items: center; gap: 12px; }
+
+  .nav-toggle { display: none; }
+
+  /* ─────────────────────────────────────────────────────────────
+     HERO
+  ───────────────────────────────────────────────────────────── */
+  .hero { padding-top: 72px; }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 55fr 45fr;
+    gap: 56px;
+    align-items: center;
+  }
+  .hero h1 {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800;
+    margin: 18px 0 22px;
+  }
+  .hero h1 .hl { color: var(--blue); }
+  .hero-lead {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 540px;
+    margin-bottom: 32px;
+  }
+
+  /* email CTA */
+  .email-cta {
+    display: flex;
+    gap: 12px;
+    max-width: 520px;
+    margin-bottom: 28px;
+  }
+  .email-field {
+    position: relative;
+    flex: 1;
+  }
+  .email-field input {
+    width: 100%;
+    height: 48px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-badge);
+    padding: 0 16px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--dark);
+    background: #fff;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    outline: none;
+  }
+  .email-field input::placeholder { color: #94A3B8; }
+  .email-field input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+  }
+  .email-field input.valid {
+    border-color: var(--success);
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+  }
+  .email-field .check-ok {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%) scale(0.6);
+    opacity: 0;
+    color: var(--success);
+    transition: opacity 150ms ease, transform 150ms ease;
+    pointer-events: none;
+  }
+  .email-field input.valid + .check-ok { opacity: 1; transform: translateY(-50%) scale(1); }
+
+  /* social proof */
+  .social-proof { display: flex; align-items: center; gap: 14px; }
+  .avatars { display: flex; }
+  .avatars .av {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    margin-left: -10px;
+    display: grid; place-items: center;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+  }
+  .avatars .av:first-child { margin-left: 0; }
+  .av:nth-child(1){ background:#2563EB; }
+  .av:nth-child(2){ background:#10B981; }
+  .av:nth-child(3){ background:#F59E0B; }
+  .av:nth-child(4){ background:#0F172A; }
+  .av:nth-child(5){ background:#64748B; }
+  .social-proof span { font-size: 14px; color: var(--muted); }
+  .social-proof b { color: var(--dark); font-weight: 600; }
+
+  /* hero dashboard card */
+  .dash {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    padding: 22px;
+    position: relative;
+  }
+  .dash-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .dash-head .label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .dash-head .val   { font-family: var(--font-head); font-weight: 800; font-size: 22px; }
+  .dash-icon {
+    width: 38px; height: 38px;
+    background: rgba(37,99,235,0.08);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: var(--blue);
+  }
+
+  /* chart */
+  .chart {
+    height: 132px;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 8px 4px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .bar {
+    flex: 1;
+    background: linear-gradient(180deg, #60A5FA, #2563EB);
+    border-radius: 6px 6px 0 0;
+    height: 0;
+    animation: grow 900ms cubic-bezier(.22,1,.36,1) forwards;
+  }
+  .bar.muted { background: linear-gradient(180deg, #CBD5E1, #94A3B8); }
+  @keyframes grow { to { height: var(--h); } }
+
+  .dash-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    padding: 12px 14px;
+  }
+  .metric .n { font-family: var(--font-head); font-weight: 700; font-size: 22px; }
+  .metric .n.warn { color: var(--warning); }
+  .metric .n.ok   { color: var(--success); }
+  .metric .l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* DGI badge */
+  .badge-dgi {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--dgi-bg);
+    color: var(--dgi-text);
+    border-radius: var(--r-pill);
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .floaty { animation: floaty 6s ease-in-out infinite; }
+  @keyframes floaty { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-8px);} }
+
+  /* ─────────────────────────────────────────────────────────────
+     STEPS
+  ───────────────────────────────────────────────────────────── */
+  .steps-bg { background: var(--surface); }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    position: relative;
+  }
+  /* dotted connector line behind icons (desktop) */
+  .steps::before {
+    content: "";
+    position: absolute;
+    top: 32px; left: 12.5%; right: 12.5%;
+    border-top: 2px dashed #CBD5E1;
+    z-index: 0;
+  }
+  .step { position: relative; z-index: 1; text-align: center; }
+  .step-icon {
+    width: 64px; height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 16px;
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.15);
+    color: var(--blue);
+    display: grid; place-items: center;
+    transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  }
+  .step:hover .step-icon {
+    background: var(--blue);
+    color: #fff;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(37,99,235,0.25);
+  }
+  .step-num {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--blue); margin-bottom: 6px;
+  }
+  .step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .step p  { font-size: 14.5px; color: var(--muted); }
+
+  /* ─────────────────────────────────────────────────────────────
+     FEATURE
+  ───────────────────────────────────────────────────────────── */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: 45fr 55fr;
+    gap: 56px;
+    align-items: center;
+  }
+  .feat-panel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .feat-panel-head {
+    background: #3F6212; /* olive green */
+    color: #ECFCCB;
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .feat-panel-head .t { font-family: var(--font-head); font-weight: 700; font-size: 15px; color:#fff; }
+  .feat-panel-head .dot { width: 9px; height: 9px; border-radius: 50%; background:#A3E635; box-shadow: 0 0 0 4px rgba(163,230,53,.25); }
+  .feat-panel-body { padding: 20px; }
+  .feat-stat { margin-bottom: 16px; }
+  .feat-stat .l { font-size: 12px; color: var(--muted); }
+  .feat-stat .n { font-family: var(--font-head); font-weight: 800; font-size: 26px; }
+  .feat-stat .n small { font-size: 14px; font-weight: 500; color: var(--muted); }
+  .progress {
+    height: 10px; border-radius: var(--r-pill); background: var(--surface);
+    border: 1px solid var(--border); overflow: hidden; margin-top: 8px;
+  }
+  .progress > i { display:block; height: 100%; width: 62%; background: linear-gradient(90deg,#3F6212,#65A30D); }
+
+  /* alert card */
+  .alert {
+    background: var(--alert-bg);
+    border-left: 3px solid var(--warning);
+    color: var(--alert-text);
+    border-radius: var(--r-badge);
+    padding: 12px 14px;
+    font-size: 13.5px;
+    display: flex; gap: 10px; align-items: flex-start;
+    margin-top: 18px;
+  }
+  .alert.red {
+    background: #FEF2F2;
+    border-left-color: #EF4444;
+    color: #991B1B;
+  }
+
+  .feat-list h2 { font-size: clamp(26px,3.4vw,38px); font-weight: 800; margin: 12px 0 28px; }
+  .feat-item { display: flex; gap: 16px; padding: 16px 0; border-top: 1px solid var(--border); }
+  .feat-item:first-of-type { border-top: none; }
+  .feat-check {
+    flex: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(37,99,235,0.1);
+    color: var(--blue);
+    display: grid; place-items: center;
+    margin-top: 2px;
+  }
+  .feat-item h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .feat-item p  { font-size: 14.5px; color: var(--muted); }
+
+  /* ─────────────────────────────────────────────────────────────
+     PRICING
+  ───────────────────────────────────────────────────────────── */
+  .pricing-bg { background: var(--surface); }
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    align-items: stretch;
+  }
+  .plan {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    padding: 32px 28px;
+    display: flex; flex-direction: column;
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .plan:hover { transform: scale(1.02); box-shadow: var(--shadow-card); }
+  .plan.featured {
+    border: 2px solid var(--blue);
+    box-shadow: 0 12px 34px rgba(37,99,235,0.16);
+    transform: translateY(-8px);
+  }
+  .plan.featured:hover { transform: translateY(-8px) scale(1.02); }
+  .plan-badge {
+    align-self: flex-start;
+    background: var(--blue);
+    color: #fff;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 5px 12px;
+    border-radius: var(--r-pill);
+    margin-bottom: 16px;
+  }
+  .plan-name { font-family: var(--font-head); font-weight: 700; font-size: 19px; }
+  .plan-price { font-family: var(--font-head); font-weight: 800; font-size: 40px; margin: 10px 0 2px; }
+  .plan-price small { font-size: 15px; font-weight: 500; color: var(--muted); }
+  .plan-sub { font-size: 13.5px; color: var(--muted); margin-bottom: 22px; }
+  .plan-features { margin-bottom: 26px; flex: 1; }
+  .plan-features li {
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 14.5px; padding: 8px 0; color: #334155;
+  }
+  .plan-features svg { flex: none; margin-top: 3px; color: var(--blue); }
+
+  /* ─────────────────────────────────────────────────────────────
+     FINAL CTA
+  ───────────────────────────────────────────────────────────── */
+  .cta-final { background: var(--blue); color: #fff; }
+  .cta-final .wrap { text-align: center; max-width: 720px; }
+  .cta-final h2 { color: #fff; font-size: clamp(30px,4vw,46px); font-weight: 800; }
+  .cta-final p  { color: rgba(255,255,255,0.85); font-size: 18px; margin: 16px 0 32px; }
+  .cta-final .btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-white { background: #fff; color: var(--blue); }
+  .btn-white:hover { background: #EFF6FF; }
+  .btn-ghost-white { background: transparent; color: #fff; border-color: rgba(255,255,255,0.5); }
+  .btn-ghost-white:hover { background: rgba(255,255,255,0.12); border-color:#fff; }
+
+  /* ─────────────────────────────────────────────────────────────
+     FOOTER
+  ───────────────────────────────────────────────────────────── */
+  footer { background: var(--white); border-top: 1px solid var(--border); padding: 64px 0 32px; }
+  .foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+  .foot-about p { font-size: 14px; color: var(--muted); margin-top: 12px; max-width: 280px; }
+  .foot-col h4 {
+    font-family: var(--font-body);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); font-weight: 600; margin-bottom: 16px;
+  }
+  .foot-col a { display: block; font-size: 14.5px; color: #475569; padding: 6px 0; transition: color 150ms ease; }
+  .foot-col a:hover { color: var(--blue); }
+  .foot-base {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    font-size: 13px; color: var(--muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     RESPONSIVE
+  ───────────────────────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .hero-grid { gap: 36px; }
+    .foot-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  }
+
+  @media (max-width: 768px) {
+    :root { --pad-section: 64px; }
+    .nav-links, .nav-actions .btn-login { display: none; }
+    .nav-toggle { display: inline-grid; }
+
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero { padding-top: 48px; }
+    .dash { max-width: 420px; margin: 0 auto; }
+
+    .steps { grid-template-columns: 1fr 1fr; gap: 32px 20px; }
+    .steps::before { display: none; }
+
+    .feat-grid { grid-template-columns: 1fr; }
+
+    .plans { grid-template-columns: 1fr; }
+    .plan.featured { transform: none; }
+    .plan.featured:hover { transform: scale(1.02); }
+
+    .email-cta { flex-direction: column; }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .steps { grid-template-columns: 1fr; }
+    .foot-grid { grid-template-columns: 1fr; }
+    .dash-metrics { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .bar { height: var(--h); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ [1] NAVBAR ═══════════════ -->
+<nav class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a href="#" class="logo" aria-label="Expensly inicio"><span class="mark">Expens</span>ly</a>
+
+    <ul class="nav-links">
+      <li><a href="#caracteristicas">Características</a></li>
+      <li><a href="#solucion">Solución</a></li>
+      <li><a href="#precios">Precios</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="#" class="btn btn-ghost btn-login">Iniciar sesión</a>
+      <a href="#precios" class="btn btn-primary">Comenzar Gratis</a>
+      <button class="btn btn-ghost nav-toggle" id="navToggle" aria-label="Abrir menú de navegación">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════ [2] HERO ═══════════════ -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="overline blue">Gestión de gastos corporativos</span>
+      <h1>El caos de tus viáticos, <span class="hl">bajo control</span> y 100% protegido ante la DGI</h1>
+      <p class="hero-lead">Cientos de empresas panameñas pierden miles de dólares en gastos no justificados. Expensly automatiza desde la compra hasta la conciliación bancaria con validez legal.</p>
+
+      <form class="email-cta" id="emailForm" novalidate>
+        <label class="email-field">
+          <span class="overline" style="position:absolute;left:-9999px;">Correo corporativo</span>
+          <input type="email" id="emailInput" placeholder="tu@empresa.com" aria-label="Correo corporativo" autocomplete="email">
+          <span class="check-ok" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+        </label>
+        <button type="submit" class="btn btn-primary btn-pill">Prueba Gratis 14 Días</button>
+      </form>
+
+      <div class="social-proof">
+        <div class="avatars" aria-hidden="true">
+          <span class="av">RG</span><span class="av">MC</span><span class="av">JP</span><span class="av">LD</span><span class="av">+</span>
+        </div>
+        <span>Más de <b>500 empresas</b> en Ciudad de Panamá confían en nosotros</span>
+      </div>
+    </div>
+
+    <!-- Floating dashboard card -->
+    <div class="dash floaty" role="img" aria-label="Panel de gasto mensual de ejemplo con métricas y validación DGI">
+      <div class="dash-head">
+        <div>
+          <div class="label">Gasto Mensual Real</div>
+          <div class="val">$17,360.50</div>
+        </div>
+        <div class="dash-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+        </div>
+      </div>
+
+      <div class="chart" aria-hidden="true">
+        <span class="bar" style="--h:42%"></span>
+        <span class="bar" style="--h:60%"></span>
+        <span class="bar" style="--h:38%"></span>
+        <span class="bar" style="--h:78%"></span>
+        <span class="bar" style="--h:55%"></span>
+        <span class="bar" style="--h:90%"></span>
+        <span class="bar muted" style="--h:48%"></span>
+      </div>
+
+      <div class="dash-metrics">
+        <div class="metric">
+          <div class="n warn">$4,520.00</div>
+          <div class="l">Por Aprobar</div>
+        </div>
+        <div class="metric">
+          <div class="n ok">$12,840.50</div>
+          <div class="l">Liquidado</div>
+        </div>
+      </div>
+
+      <div class="badge-dgi">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        DGI Compliant — Respaldado con Factura Electrónica
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ [3] STEPS ═══════════════ -->
+<section class="steps-bg" id="solucion">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="overline blue">Flujo automatizado</span>
+      <h2>Eficiencia Panameña en 4 Pasos</h2>
+      <p>Desde la compra hasta la conciliación bancaria, eliminamos el error humano</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        </div>
+        <div class="step-num">Paso 01</div>
+        <h3>Generar Factura</h3>
+        <p>El colaborador realiza el gasto y solicita factura electrónica legal.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="18" y1="14" x2="21" y2="14"/><line x1="18" y1="18" x2="21" y2="21"/></svg>
+        </div>
+        <div class="step-num">Paso 02</div>
+        <h3>Registrar por QR o IA</h3>
+        <p>Nuestra app lee el QR y extrae los datos fiscales automáticamente.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="step-num">Paso 03</div>
+        <h3>Aprobar por Contador</h3>
+        <p>El contador valida en un clic desde el panel administrativo.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        </div>
+        <div class="step-num">Paso 04</div>
+        <h3>Realizar Conciliación</h3>
+        <p>Sincronización automática con extractos bancarios locales.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ [4] FEATURE ═══════════════ -->
+<section id="caracteristicas">
+  <div class="wrap feat-grid">
+    <!-- mockup panel -->
+    <div class="feat-panel">
+      <div class="feat-panel-head">
+        <span class="t">Control de Giras · Q2</span>
+        <span class="dot" aria-hidden="true"></span>
+      </div>
+      <div class="feat-panel-body">
+        <div class="feat-stat">
+          <div class="l">Giras en curso</div>
+          <div class="n">12 <small>Activas</small></div>
+        </div>
+        <div class="feat-stat">
+          <div class="l">Saldo consumido</div>
+          <div class="n">$24,900 <small>de $40k</small></div>
+          <div class="progress" aria-hidden="true"><i></i></div>
+        </div>
+        <div class="alert red">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none;margin-top:1px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span><b>Alerta de presupuesto:</b> la región Chiriquí superó el 85% del límite asignado.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- features list -->
+    <div class="feat-list">
+      <span class="overline blue">Inteligencia de negocio</span>
+      <h2>Toma decisiones con datos, no con suposiciones</h2>
+
+      <div class="feat-item">
+        <span class="feat-check" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <div>
+          <h3>Congelamiento de presupuestos</h3>
+          <p>Detén el gasto excesivo antes de que ocurra con límites dinámicos.</p>
+        </div>
+      </div>
+
+      <div class="feat-item">
+        <span class="feat-check" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <div>
+          <h3>Auditoría DGI 1-Click</h3>
+          <p>Exporta reportes listos para auditorías fiscales sin re-digitar datos.</p>
+        </div>
+      </div>
+
+      <div class="feat-item">
+        <span class="feat-check" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <div>
+          <h3>Mapeo de Rutas y Giras</h3>
+          <p>Visibilidad geográfica de los gastos de tu fuerza de ventas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ [5] PRICING ═══════════════ -->
+<section class="pricing-bg" id="precios">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="overline blue">Precios</span>
+      <h2>Planes diseñados para crecer</h2>
+      <p>Sin costos ocultos. Transparentes como tu contabilidad debe ser.</p>
+    </div>
+
+    <div class="plans">
+      <!-- Startup -->
+      <div class="plan">
+        <div class="plan-name">Startup</div>
+        <div class="plan-price">$49<small>/mes</small></div>
+        <div class="plan-sub">Para equipos que empiezan a ordenar sus gastos.</div>
+        <ul class="plan-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Hasta 5 usuarios</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Captura de facturas con IA</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Reportes básicos</li>
+        </ul>
+        <a href="#" class="btn btn-outline btn-block">Empezar ahora</a>
+      </div>
+
+      <!-- Business (featured) -->
+      <div class="plan featured">
+        <span class="plan-badge">Recomendado para Empresas</span>
+        <div class="plan-name">Plan Business</div>
+        <div class="plan-price">$129<small>/mes</small></div>
+        <div class="plan-sub">El estándar para operaciones en crecimiento.</div>
+        <ul class="plan-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Usuarios ilimitados</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Conciliación bancaria automática</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Soporte prioritario 24/7</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> API de integración ERP</li>
+        </ul>
+        <a href="#" class="btn btn-primary btn-block">Prueba 14 Días Gratis</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">Custom</div>
+        <div class="plan-sub">Para corporaciones con requerimientos a medida.</div>
+        <ul class="plan-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Implementación on-site</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Contrato de servicios SLA</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Seguridad SOC2 / ISO</li>
+        </ul>
+        <a href="#" class="btn btn-outline btn-block">Hablar con Ventas</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ [6] FINAL CTA ═══════════════ -->
+<section class="cta-final">
+  <div class="wrap">
+    <h2>Únete a la revolución financiera de Panamá</h2>
+    <p>Implementación en menos de 24 horas.</p>
+    <div class="btns">
+      <a href="#" class="btn btn-white">Crear Cuenta Gratis</a>
+      <a href="#" class="btn btn-ghost-white">Agendar Demo Live</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ [7] FOOTER ═══════════════ -->
+<footer id="faq">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <a href="#" class="logo"><span class="mark">Expens</span>ly</a>
+        <p>Hecho en Panamá 🇵🇦. Plataforma de gestión de gastos corporativos con cumplimiento fiscal DGI y respaldo de factura electrónica.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Producto</h4>
+        <a href="#caracteristicas">Características</a>
+        <a href="#solucion">Solución</a>
+        <a href="#precios">Precios</a>
+        <a href="#">Integraciones</a>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <a href="#">Términos de servicio</a>
+        <a href="#">Política de privacidad</a>
+        <a href="#">Cumplimiento DGI</a>
+        <a href="#">Seguridad</a>
+      </div>
+      <div class="foot-col">
+        <h4>Contacto</h4>
+        <a href="#">Ventas</a>
+        <a href="#">Soporte</a>
+        <a href="mailto:hola@expensly.com">hola@expensly.com</a>
+        <a href="#">Ciudad de Panamá</a>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2024 Expensly. Regulated by the Superintendency of Banks of Panama.</span>
+      <span>Hecho con orgullo en Ciudad de Panamá.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Navbar: add shadow + blur on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    function onScroll() {
+      nav.classList.toggle('scrolled', window.scrollY > 8);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+
+  // Email CTA: inline validation (green border when valid)
+  (function () {
+    var form  = document.getElementById('emailForm');
+    var input = document.getElementById('emailInput');
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    input.addEventListener('input', function () {
+      input.classList.toggle('valid', re.test(input.value.trim()));
+    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (re.test(input.value.trim())) {
+        input.classList.add('valid');
+        // Demo: en producción aquí se dispara el alta de prueba.
+      } else {
+        input.focus();
+      }
+    });
+  })();
+
+  // Mobile nav toggle -> jump to pricing (lightweight, no menu overlay needed)
+  (function () {
+    var t = document.getElementById('navToggle');
+    if (t) t.addEventListener('click', function () {
+      document.getElementById('precios').scrollIntoView({ behavior: 'smooth' });
+    });
+  })();
+</script>
+
+</body>
+</html>
