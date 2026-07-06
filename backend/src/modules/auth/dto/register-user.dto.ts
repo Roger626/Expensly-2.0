@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, MinLength, MaxLength, IsUUID, IsEmail, IsBoolean } from 'class-validator';
-import { RolUsuario } from "generated/prisma/enums";
+import { RolUsuario } from "../../../../generated/prisma/enums";
 
 export class RegisterUserDto{
 

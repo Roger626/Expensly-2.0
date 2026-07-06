@@ -1,15 +1,40 @@
 <div class="form-control">
       <label [for]="label">{{ label }}</label>
-      <input
-        [type]="type"
-        [id]="label"
-        (input)="onInput($event)"
-        [placeholder]="placeholder"
-        (blur)="onTouched()"
-        [disabled]="disable"
-        [value]="value"
-        [class.is-invalid]="isInvalid"
-      />
+      <div class="input-shell" [class.input-shell--password]="type === 'password'">
+        <input
+          [type]="inputType"
+          [id]="label"
+          (input)="onInput($event)"
+          [placeholder]="placeholder"
+          (blur)="onTouched()"
+          [disabled]="disable"
+          [value]="value"
+          [class.is-invalid]="isInvalid"
+        />
+        @if (type === 'password' && showPasswordToggle) {
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="passwordVisible"
+          >
+            @if (passwordVisible) {
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M3 3l18 18" />
+                <path d="M10.6 10.6a2.5 2.5 0 0 0 3.54 3.54" />
+                <path d="M9.88 5.65A10.75 10.75 0 0 1 12 5c6 0 9.5 7 9.5 7a17.58 17.58 0 0 1-3.52 4.42" />
+                <path d="M6.48 6.48C4.07 8.1 2.5 12 2.5 12s3.5 7 9.5 7c1.17 0 2.25-.2 3.24-.55" />
+              </svg>
+            }
+          </button>
+        }
+      </div>
       <span *ngIf="isInvalid" class="error-msg">
         Este campo es requerido o inválido
       </span>

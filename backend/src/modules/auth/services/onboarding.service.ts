@@ -3,8 +3,8 @@ import type { IAuthRepository } from '../interfaces/iauth.repository';
 import { OnboardingCompanyDto } from '../dto/onboarding-company.dto';
 import { RegisterUserDto } from '../dto/register-user.dto';
 import { AuthService, AuthResponse } from './auth.service';
-import { RolUsuario } from 'generated/prisma/enums';
-import type { organizaciones } from 'generated/prisma/client';
+import { RolUsuario } from '../../../../generated/prisma/enums';
+import type { organizaciones } from '../../../../generated/prisma/client';
 
 export interface OnboardingResponse {
     organization: organizaciones;
@@ -29,16 +29,23 @@ export class OnboardingService {
             password: string;
         },
     ): Promise<OnboardingResponse> {
-        // Validar que el RUC no exista
-        const existingOrg = await this.authRepository.existsOrganizationByRuc(companyDto.ruc);
+        const [existingOrg, existingUser] = await Promise.all([
+            this.authRepository.existsOrganizationByRuc(companyDto.ruc),
+            this.authRepository.existsUserByEmail(adminData.email),
+        ]);
+
+        const conflicts: string[] = [];
+
         if (existingOrg) {
-            throw new ConflictException('Ya existe una organización con este RUC');
+            conflicts.push('Ya existe una organización con este RUC');
         }
 
-        // Validar que el email no esté en uso
-        const existingUser = await this.authRepository.existsUserByEmail(adminData.email);
         if (existingUser) {
-            throw new ConflictException('El correo electrónico ya está registrado');
+            conflicts.push('El correo electrónico ya está registrado');
+        }
+
+        if (conflicts.length > 0) {
+            throw new ConflictException(conflicts.join('. '));
         }
 
         // Crear la organización

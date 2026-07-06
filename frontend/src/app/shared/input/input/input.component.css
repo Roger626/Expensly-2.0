@@ -8,6 +8,20 @@
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
+.input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-shell input {
+  width: 100%;
+}
+
+.input-shell--password input {
+  padding-right: 3rem;
+}
+
 /* Estilo de la etiqueta (Label) */
 label {
   font-size: 0.875rem; /* 14px */
@@ -39,6 +53,52 @@ input:disabled {
   background-color: #f3f4f6;
   color: #9ca3af;
   cursor: not-allowed;
+}
+
+/* Oculta el ícono nativo de "mostrar contraseña" de Edge/IE, que de otro
+   modo se superpone a nuestro botón .password-toggle */
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.55rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #4f46e5;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 999px;
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.password-toggle:hover {
+  color: #312e81;
+  background: rgba(79, 70, 229, 0.08);
+  transform: translateY(-1px);
+}
+
+.password-toggle:focus-visible {
+  outline: none;
+  background: rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.16);
+}
+
+.password-toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* --- ESTADOS DE ERROR --- */

@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { IRegistroGastosRepository } from '../interfaces/iregistro-gastos.repository';
-import type { facturas } from 'generated/prisma/client';
+import type { facturas } from '../../../../generated/prisma/client';
 import { CreateFacturaDto, UpdateFacturaDto } from '../dto/factura.dto';
 import { FacturaEntity } from '../entities/factura.entity';
 

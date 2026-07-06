@@ -14,9 +14,11 @@ export class InputComponent implements ControlValueAccessor {
   @Input() label: string = ''
   @Input() type: "text" | "password" | "email" | "date" | "number" = "text"
   @Input() placeholder: string = ''
+  @Input() showPasswordToggle: boolean = true
 
   value: any
   disable:boolean = false
+  passwordVisible = false
 
   onChange = (value: any) => {};
   onTouched = () => {};
@@ -52,6 +54,20 @@ export class InputComponent implements ControlValueAccessor {
 
   get isInvalid() {
     return this.controlDir.control?.invalid && this.controlDir.control?.touched;
+  }
+
+  get inputType(): string {
+    if (this.type === 'password' && this.passwordVisible) {
+      return 'text';
+    }
+
+    return this.type;
+  }
+
+  togglePasswordVisibility(): void {
+    if (this.type === 'password') {
+      this.passwordVisible = !this.passwordVisible;
+    }
   }
   
 

@@ -41,6 +41,7 @@ export class LoginComponent {
 
     this.authService.login(email, password).subscribe({
       next: () => {
+        this.isLoading = false;
         const role = this.authService.userRole();
         // Redirigir según el rol del usuario
         if (role === Role.SUPERADMIN || role === Role.CONTADOR) {
@@ -50,8 +51,11 @@ export class LoginComponent {
         }
       },
       error: (err) => {
-        this.isLoading    = false;
-        this.errorMessage = err.error?.message || 'Credenciales incorrectas. Intenta de nuevo.';
+        this.isLoading = false;
+        this.errorMessage = this.authService.getFriendlyErrorMessage(
+          err,
+          'Credenciales incorrectas. Intenta de nuevo.'
+        );
       },
     });
   }

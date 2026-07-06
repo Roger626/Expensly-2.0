@@ -48,6 +48,16 @@ h1 {
   gap: 1.25rem;
 }
 
+.form-error {
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
 /* --- EL TRUCO PARA EL "FORGOT PASSWORD" --- */
 .input-group {
   position: relative;
@@ -85,6 +95,11 @@ h1 {
 
 .btn-primary:hover {
   background-color: #1746c1;
+}
+
+.btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
 }
 
 .register-text {

@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -57,6 +57,35 @@ export class AuthService {
     );
   }
 
+  getFriendlyErrorMessage(error: unknown, fallback: string): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return fallback;
+    }
+
+    const message = this.extractResponseMessage(error.error);
+    if (message) {
+      return message;
+    }
+
+    if (error.status === 401) {
+      return 'Correo o contraseña incorrectos.';
+    }
+
+    if (error.status === 409) {
+      return 'Ya existe un registro con esos datos.';
+    }
+
+    if (error.status === 504 || error.status === 408) {
+      return 'El servidor tardó demasiado en responder. Intenta de nuevo.';
+    }
+
+    if (error.status === 0) {
+      return 'No fue posible conectar con el servidor. Revisa tu conexión e inténtalo otra vez.';
+    }
+
+    return fallback;
+  }
+
   /**
    * Paso 1 — Solicita el enlace de restablecimiento de contraseña.
    * El backend envía el correo si el email existe (respuesta siempre genérica).
@@ -103,6 +132,27 @@ export class AuthService {
   private _loadUserFromStorage(): AuthUser | null {
     const raw = localStorage.getItem(this.USER_KEY);
     return raw ? JSON.parse(raw) : null;
+  }
+
+  private extractResponseMessage(payload: unknown): string | null {
+    if (!payload) {
+      return null;
+    }
+
+    if (typeof payload === 'string') {
+      return payload;
+    }
+
+    if (typeof payload === 'object' && 'message' in payload) {
+      const message = (payload as { message?: string | string[] }).message;
+      if (Array.isArray(message)) {
+        return message.join(' ');
+      }
+
+      return message ?? null;
+    }
+
+    return null;
   }
 
   /** Decodifica el payload del JWT sin verificar la firma. */

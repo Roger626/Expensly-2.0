@@ -8,7 +8,7 @@ import type { IAuthRepository } from '../interfaces/iauth.repository';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterUserDto } from '../dto/register-user.dto';
 import { InviteUserDto } from '../dto/invite-user.dto';
-import type { usuarios } from 'generated/prisma/client';
+import type { usuarios } from '../../../../generated/prisma/client';
 
 export interface JwtPayload {
     sub: string;

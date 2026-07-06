@@ -1,6 +1,6 @@
 <nav class="nav" [class.scrolled]="scrolled" [class.menu-open]="menuOpen">
   <div class="nav-inner">
-    <a routerLink="/" class="logo" aria-label="Expensly inicio"><span class="mark">Expens</span>ly</a>
+    <a routerLink="/" class="logo" aria-label="Expensly inicio"><span class="mark">Expensly</span></a>
 
     <ul class="nav-links">
       <li><button type="button" (click)="scrollTo('solucion')">Solución</button></li>
@@ -11,7 +11,7 @@
 
     <div class="nav-actions">
       <a routerLink="/auth/login" class="btn btn-ghost btn-login">Iniciar sesión</a>
-      <a routerLink="/auth/register" class="btn btn-primary btn-cta">Comenzar Gratis</a>
+      <a routerLink="/auth/onboarding" class="btn btn-primary btn-cta">Comenzar Gratis</a>
       <button class="burger" [class.open]="menuOpen" (click)="toggleMenu()"
               aria-label="Abrir menú de navegación" [attr.aria-expanded]="menuOpen">
         <span></span><span></span><span></span>
@@ -26,7 +26,7 @@
     <button type="button" (click)="scrollTo('faq')">FAQ</button>
     <div class="mobile-actions">
       <a routerLink="/auth/login" class="btn btn-soft btn-block">Iniciar sesión</a>
-      <a routerLink="/auth/register" class="btn btn-primary btn-block">Comenzar Gratis</a>
+      <a routerLink="/auth/onboarding" class="btn btn-primary btn-block">Comenzar Gratis</a>
     </div>
   </div>
 </nav>
@@ -150,7 +150,7 @@
       <span class="overline blue">El problema</span>
       <h2>La gestión manual de gastos cuesta más de lo que crees</h2>
       <p>Cada factura en papel, cada reembolso sin respaldo y cada hora de digitación es dinero que se fuga y riesgo fiscal que se acumula.</p>
-      <a routerLink="/auth/register" class="btn btn-soft">Ver cómo lo resolvemos</a>
+      <a routerLink="/auth/onboarding" class="btn btn-soft">Ver cómo lo resolvemos</a>
     </div>
 
     <ul class="pain-list reveal">
@@ -412,7 +412,7 @@
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Captura de facturas con IA</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Reportes básicos</li>
         </ul>
-        <a routerLink="/auth/register" class="btn btn-soft btn-block">Empezar ahora</a>
+        <a routerLink="/auth/onboarding" class="btn btn-soft btn-block">Empezar ahora</a>
       </div>
 
       <div class="plan featured reveal">
@@ -426,7 +426,7 @@
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Soporte prioritario 24/7</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> API de integración ERP</li>
         </ul>
-        <a routerLink="/auth/register" class="btn btn-primary btn-block">Prueba 14 Días Gratis</a>
+        <a routerLink="/auth/onboarding" class="btn btn-primary btn-block">Prueba 14 Días Gratis</a>
       </div>
 
       <div class="plan reveal">
@@ -482,7 +482,7 @@
     <h2>Únete a la revolución financiera de Panamá</h2>
     <p>Implementación en menos de 24 horas.</p>
     <div class="btns">
-      <a routerLink="/auth/register" class="btn btn-white">Crear Cuenta Gratis</a>
+      <a routerLink="/auth/onboarding" class="btn btn-white">Crear Cuenta Gratis</a>
       <a href="mailto:ventas@expensly.com" class="btn btn-ghost-white">Agendar Demo Live</a>
     </div>
   </div>
@@ -529,7 +529,7 @@
       <div class="foot-col">
         <h4>Acceso</h4>
         <a routerLink="/auth/login">Iniciar sesión</a>
-        <a routerLink="/auth/register">Crear cuenta</a>
+        <a routerLink="/auth/onboarding">Crear cuenta</a>
         <a href="mailto:hola&#64;expensly.com">hola&#64;expensly.com</a>
         <span class="foot-loc">Ciudad de Panamá 🇵🇦</span>
       </div>

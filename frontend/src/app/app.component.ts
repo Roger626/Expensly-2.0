@@ -18,6 +18,7 @@ import { Subscription } from 'rxjs';
 export class AppComponent implements OnInit, OnDestroy {
   isAdminRoute = false;
   isfacturaRoute = false;
+  isOnboardingRoute = false;
   isSidebarCollapsed = false;
   private sub: Subscription = new Subscription();
 
@@ -45,8 +46,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private checkRoute(url: string) {
-    this.isAdminRoute    = url.startsWith('/admin');
-    this.isfacturaRoute  = url.startsWith('/facturas');
+    this.isAdminRoute      = url.startsWith('/admin');
+    this.isfacturaRoute    = url.startsWith('/facturas');
+    this.isOnboardingRoute = url.startsWith('/auth/onboarding');
   }
 
   ngOnDestroy(): void {

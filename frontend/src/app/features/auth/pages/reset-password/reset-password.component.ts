@@ -64,8 +64,10 @@ export class ResetPasswordComponent implements OnInit {
       },
       error: (err) => {
         this.viewState = 'error';
-        this.errorMessage =
-          err?.error?.message ?? 'El enlace ha expirado o es inválido. Solicita uno nuevo.';
+        this.errorMessage = this.authService.getFriendlyErrorMessage(
+          err,
+          'El enlace ha expirado o es inválido. Solicita uno nuevo.'
+        );
       },
     });
   }

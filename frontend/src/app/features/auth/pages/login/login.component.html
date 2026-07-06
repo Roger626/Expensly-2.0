@@ -6,6 +6,12 @@
     </header>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+
+      @if (errorMessage) {
+        <div class="form-error" role="alert" aria-live="polite">
+          {{ errorMessage }}
+        </div>
+      }
       
       <app-input 
         label="Email" 
@@ -25,7 +31,9 @@
         </app-input>
       </div>
 
-      <button type="submit" class="btn-primary">Iniciar sesión</button>
+      <button type="submit" class="btn-primary" [disabled]="isLoading">
+        {{ isLoading ? 'Validando...' : 'Iniciar sesión' }}
+      </button>
 
       <span class="register-text">
         ¿No tienes una cuenta? <a [routerLink]="['/auth/onboarding']">Regístra tu organización</a>
