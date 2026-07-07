@@ -12,3 +12,4 @@ frontend/.env
 !.env.example
 !backend/.env.example
 !frontend/.env.example
+VPS*.txt
