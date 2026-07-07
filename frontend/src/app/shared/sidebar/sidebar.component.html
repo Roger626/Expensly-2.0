@@ -5,39 +5,45 @@
       <div class="logo-icon">E</div>
       <span class="logo-text" *ngIf="!isCollapsed">Expensly</span>
     </div>
-    
-    <button class="toggle-btn" (click)="toggleSidebar()" [title]="isCollapsed ? 'Expandir' : 'Colapsar'">
-      <lucide-icon [name]="isCollapsed ? 'chevron-right' : 'chevron-left'"></lucide-icon>
-    </button>
   </div>
+
+  <button class="toggle-btn" (click)="toggleSidebar()" [title]="isCollapsed ? 'Expandir' : 'Colapsar'">
+    <lucide-icon [name]="isCollapsed ? 'chevron-right' : 'chevron-left'"></lucide-icon>
+  </button>
 
   <ul class="nav-links">
     <li>
-      <a routerLink="/admin/facturas" routerLinkActive="clase-activa" [routerLinkActiveOptions]="{exact: true}">
+      <a routerLink="/admin/dashboard" routerLinkActive="clase-activa" [routerLinkActiveOptions]="{exact: true}" [title]="isCollapsed ? 'Dashboard' : ''">
+        <lucide-icon name="layout-dashboard" class="icon"></lucide-icon>
+        <span class="text" *ngIf="!isCollapsed">Dashboard</span>
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/facturas" routerLinkActive="clase-activa" [routerLinkActiveOptions]="{exact: true}" [title]="isCollapsed ? 'Facturas' : ''">
         <lucide-icon name="file-text" class="icon"></lucide-icon>
         <span class="text" *ngIf="!isCollapsed">Facturas</span>
       </a>
     </li>
     <li>
-      <a routerLink="/admin/facturas/crear" routerLinkActive="clase-activa">
+      <a routerLink="/admin/facturas/crear" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Nueva Factura' : ''">
         <lucide-icon name="plus-circle" class="icon"></lucide-icon>
         <span class="text" *ngIf="!isCollapsed">Nueva Factura</span>
       </a>
     </li>
     <li>
-      <a routerLink="/admin/usuarios" routerLinkActive="clase-activa">
+      <a routerLink="/admin/usuarios" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Usuarios' : ''">
         <lucide-icon name="users" class="icon"></lucide-icon>
         <span class="text" *ngIf="!isCollapsed">Usuarios</span>
       </a>
     </li>
     <li>
-      <a routerLink="/admin/categorias" routerLinkActive="clase-activa">
+      <a routerLink="/admin/categorias" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Categorías' : ''">
         <lucide-icon name="layout-grid" class="icon"></lucide-icon>
         <span class="text" *ngIf="!isCollapsed">Categorías</span>
       </a>
     </li>
     <li>
-      <a routerLink="/cuenta/facturacion" routerLinkActive="clase-activa">
+      <a routerLink="/cuenta/facturacion" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Facturación' : ''">
         <lucide-icon name="credit-card" class="icon"></lucide-icon>
         <span class="text" *ngIf="!isCollapsed">Facturación</span>
       </a>
@@ -45,7 +51,7 @@
   </ul>
 
   <div class="user-logout">
-    <button (click)="onLogout()">
+    <button (click)="onLogout()" [title]="isCollapsed ? 'Cerrar Sesión' : ''">
       <lucide-icon name="log-out" class="icon"></lucide-icon>
       <span class="text" *ngIf="!isCollapsed">Cerrar Sesión</span>
     </button>

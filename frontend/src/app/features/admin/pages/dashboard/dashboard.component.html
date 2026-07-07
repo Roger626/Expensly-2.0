@@ -1,0 +1,314 @@
+<div class="page-dashboard">
+  <!-- Suscripción banner -->
+  <app-suscripcion-banner></app-suscripcion-banner>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-title-block">
+      <div class="header-eyebrow">
+        <span class="header-dot"></span>
+        Panel de Control Analítico
+      </div>
+      <h1 class="page-title">Dashboard Administrativo</h1>
+      <p class="page-subtitle">Resumen ejecutivo y tendencias financieras de la organización</p>
+    </div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div class="filter-panel card-glass">
+    <div class="filter-group">
+      <div class="filter-item">
+        <label for="preset-select">Rango de Fecha</label>
+        <select id="preset-select" class="form-select" [(ngModel)]="preset" (change)="onPresetChange()">
+          <option value="7d">Últimos 7 días</option>
+          <option value="30d">Últimos 30 días</option>
+          <option value="mes">Mes en curso</option>
+          <option value="custom">Rango personalizado</option>
+        </select>
+      </div>
+
+      @if (preset === 'custom') {
+        <div class="filter-item date-inputs">
+          <div class="date-field">
+            <label for="start-date">Desde</label>
+            <input type="date" id="start-date" class="form-input" [(ngModel)]="startDate" (change)="onFilterChange()" />
+          </div>
+          <div class="date-field">
+            <label for="end-date">Hasta</label>
+            <input type="date" id="end-date" class="form-input" [(ngModel)]="endDate" (change)="onFilterChange()" />
+          </div>
+        </div>
+      }
+
+      <div class="filter-item">
+        <label for="cat-select">Categoría</label>
+        <select id="cat-select" class="form-select" [(ngModel)]="categoriaId" (change)="onFilterChange()">
+          <option value="">Todas las categorías</option>
+          @for (cat of categories; track cat.id) {
+            <option [value]="cat.id">{{ cat.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      @if (showEmployeeFilter) {
+        <div class="filter-item">
+          <label for="emp-select">Colaborador</label>
+          <select id="emp-select" class="form-select" [(ngModel)]="usuarioId" (change)="onFilterChange()">
+            <option value="">Todos los colaboradores</option>
+            @for (emp of employees; track emp.id) {
+              <option [value]="emp.id">{{ emp.nombreCompleto || emp.email }}</option>
+            }
+          </select>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- KPI summary cards -->
+  <div class="kpi-grid">
+    <!-- Card 1: Gasto Total -->
+    <div class="kpi-card card-glass">
+      <div class="kpi-icon icon-spend">
+        <lucide-icon name="credit-card"></lucide-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Gasto Total</div>
+        <div class="kpi-value">${{ summary.gastoTotal | number:'1.2-2' }}</div>
+        <div class="kpi-subtext">Monto aprobado y pendiente</div>
+      </div>
+    </div>
+
+    <!-- Card 2: ITBMS Recuperable -->
+    <div class="kpi-card card-glass">
+      <div class="kpi-icon icon-itbms">
+        <lucide-icon name="receipt"></lucide-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">ITBMS Recuperable</div>
+        <div class="kpi-value">${{ summary.itbmsRecuperable | number:'1.2-2' }}</div>
+        <div class="kpi-subtext">Tasa de rec.: {{ summary.tasaRecuperacion | number:'1.0-2' }}%</div>
+      </div>
+    </div>
+
+    <!-- Card 3: Pendientes -->
+    <div class="kpi-card card-glass">
+      <div class="kpi-icon icon-pending">
+        <lucide-icon name="clock"></lucide-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Aprobaciones Pendientes</div>
+        <div class="kpi-value">{{ summary.aprobacionesPendientes }}</div>
+        <div class="kpi-subtext">Facturas por verificar</div>
+      </div>
+    </div>
+
+    <!-- Card 4: Reportes Vencidos -->
+    <div class="kpi-card card-glass">
+      <div class="kpi-icon icon-expired">
+        <lucide-icon name="alert-triangle"></lucide-icon>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Reportes Vencidos</div>
+        <div class="kpi-value text-red">{{ summary.reportesVencidos }}</div>
+        <div class="kpi-subtext">Pendientes por >48 horas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-grid">
+    <!-- Trend Chart -->
+    <div class="chart-card card-glass">
+      <h3 class="chart-title">Tendencia Mensual (Últimos 6 meses)</h3>
+      <p class="chart-subtitle">Gasto Total vs ITBMS acumulado</p>
+      
+      <div class="chart-container">
+        @if (trendData.length > 0) {
+          <svg [attr.width]="lineWidth" [attr.height]="lineHeight" class="svg-line-chart">
+            <defs>
+              <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.25" />
+                <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.0" />
+              </linearGradient>
+              <linearGradient id="itbmsGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#10b981" stop-opacity="0.2" />
+                <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
+              </linearGradient>
+            </defs>
+
+            <!-- Y Axis Grid lines -->
+            @for (tick of yGridTicks; track tick) {
+              <line 
+                [attr.x1]="paddingLeft" 
+                [attr.y1]="paddingTop + (lineHeight - paddingTop - paddingBottom) * (1 - tick / maxTrendVal)" 
+                [attr.x2]="lineWidth - paddingRight" 
+                [attr.y2]="paddingTop + (lineHeight - paddingTop - paddingBottom) * (1 - tick / maxTrendVal)" 
+                stroke="#e2e8f0" 
+                stroke-dasharray="3,3" />
+              <text 
+                [attr.x]="paddingLeft - 8" 
+                [attr.y]="paddingTop + (lineHeight - paddingTop - paddingBottom) * (1 - tick / maxTrendVal) + 4" 
+                class="chart-axis-label align-end">
+                {{ getYLabel(tick) }}
+              </text>
+            }
+
+            <!-- Area fills -->
+            @if (totalAreaPath) {
+              <path [attr.d]="totalAreaPath" fill="url(#totalGrad)" />
+            }
+            @if (itbmsAreaPath) {
+              <path [attr.d]="itbmsAreaPath" fill="url(#itbmsGrad)" />
+            }
+
+            <!-- Trend lines -->
+            @if (totalPath) {
+              <path [attr.d]="totalPath" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" />
+            }
+            @if (itbmsPath) {
+              <path [attr.d]="itbmsPath" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" />
+            }
+
+            <!-- X Axis ticks & labels -->
+            @for (p of trendPointsTotal; track p.label; let idx = $index) {
+              <line 
+                [attr.x1]="p.x" 
+                [attr.y1]="lineHeight - paddingBottom" 
+                [attr.x2]="p.x" 
+                [attr.y2]="lineHeight - paddingBottom + 5" 
+                stroke="#cbd5e1" />
+              <text 
+                [attr.x]="p.x" 
+                [attr.y]="lineHeight - paddingBottom + 20" 
+                class="chart-axis-label align-center">
+                {{ formatMonthLabel(p.label) }}
+              </text>
+
+              <!-- Circle handles on points -->
+              <circle [attr.cx]="p.x" [attr.cy]="p.y" r="5" fill="#4f46e5" stroke="#ffffff" stroke-width="1.5" />
+              <!-- ITBMS handles -->
+              <circle [attr.cx]="trendPointsItbms[idx].x" [attr.cy]="trendPointsItbms[idx].y" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+            }
+          </svg>
+        } @else {
+          <div class="empty-chart">No hay suficientes datos históricos</div>
+        }
+      </div>
+      
+      <!-- Legend -->
+      <div class="chart-legend">
+        <div class="legend-item">
+          <span class="legend-dot bg-indigo"></span>
+          <span>Gasto Total</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot bg-emerald"></span>
+          <span>ITBMS</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Breakdown Chart -->
+    <div class="chart-card card-glass">
+      <h3 class="chart-title">Desglose por Categorías</h3>
+      <p class="chart-subtitle">Gasto acumulado según clasificación</p>
+
+      <div class="donut-chart-container">
+        @if (categoriesData.length > 0) {
+          <div class="donut-svg-wrapper">
+            <svg width="180" height="180" viewBox="0 0 40 40" class="donut-svg">
+              <circle class="donut-hole" cx="20" cy="20" r="15.915" fill="#ffffff"></circle>
+              <circle class="donut-ring" cx="20" cy="20" r="15.915" fill="transparent" stroke="#f1f5f9" stroke-width="4"></circle>
+              
+              @for (seg of categorySegments; track seg.name) {
+                <circle 
+                  cx="20" 
+                  cy="20" 
+                  r="15.915" 
+                  fill="transparent" 
+                  [attr.stroke]="seg.color" 
+                  stroke-width="4.5"
+                  [attr.stroke-dasharray]="seg.dashArray" 
+                  [attr.stroke-dashoffset]="seg.dashOffset"
+                  transform="rotate(-90 20 20)">
+                </circle>
+              }
+            </svg>
+            <div class="donut-center-label">
+              <span class="donut-center-num">{{ summary.gastoTotal | number:'1.0-0' }}</span>
+              <span class="donut-center-text">Total USD</span>
+            </div>
+          </div>
+
+          <div class="donut-legend">
+            @for (seg of categorySegments; track seg.name) {
+              <div class="donut-legend-row">
+                <div class="donut-legend-info">
+                  <span class="legend-dot" [style.background-color]="seg.color"></span>
+                  <span class="donut-cat-name">{{ seg.name }}</span>
+                </div>
+                <div class="donut-legend-values">
+                  <span class="donut-cat-amount">${{ seg.montoTotal | number:'1.2-2' }}</span>
+                  <span class="donut-cat-pct">({{ seg.percentage }}%)</span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-chart">No hay datos en el rango seleccionado</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions Section -->
+  <div class="transactions-section card-glass">
+    <div class="section-header-block">
+      <h3 class="section-title">Últimas Transacciones</h3>
+      <p class="section-subtitle">Últimas 10 facturas subidas a la plataforma</p>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Colaborador</th>
+            <th>Categoría</th>
+            <th>Fecha Emisión</th>
+            <th class="text-right">Monto</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tx of summary.ultimasTransacciones; track tx.id) {
+            <tr>
+              <td>
+                <div class="colab-cell">
+                  <div class="colab-avatar">{{ getAvatarInitials(tx.empleado) }}</div>
+                  <span class="colab-name">{{ tx.empleado }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="cat-tag">{{ tx.categoria }}</span>
+              </td>
+              <td class="text-slate">{{ tx.fecha | date:'dd/MM/yyyy' }}</td>
+              <td class="text-right font-medium text-dark">${{ tx.montoTotal | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge-status" [ngClass]="getStatusClass(tx.estado)">
+                  {{ tx.estado }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="table-empty-row">
+                <lucide-icon name="inbox" class="empty-icon"></lucide-icon>
+                <div class="empty-text">No se encontraron facturas en el rango seleccionado</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

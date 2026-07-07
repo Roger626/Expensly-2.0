@@ -90,9 +90,8 @@
 /* --- Botón Toggle (Flecha Flotante) --- */
 .toggle-btn {
   position: absolute;
-  margin-bottom: 3vh;
-  right: -2rem; /* -24px Posición flotante sobre el borde */
-  top: 60%;
+  right: -1rem; /* Posición flotante centrada en el borde exterior */
+  top: 3.25rem; /* Alineado verticalmente con el logo icon */
   transform: translateY(-50%);
   width: 2rem; /* 32px */
   height: 2rem; /* 32px */
@@ -114,10 +113,7 @@
   background-color: #f8fafc;
 }
 
-/* Ajuste de flecha en colapsado */
-.sidebar_layout.is-collapsed .toggle-btn {
-  right: -1rem; /* -16px */
-}
+/* Removido el ajuste de right en colapsado ya que ahora se mueve automáticamente con el borde exterior de .sidebar_layout */
 
 .toggle-btn lucide-icon {
   width: 1.125rem; /* 18px */

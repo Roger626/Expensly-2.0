@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Delete, HttpCode, HttpStatus, UseInterceptors, ClassSerializerInterceptor, Put, Patch, UseGuards, ParseUUIDPipe, Inject, Res } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, HttpCode, HttpStatus, UseInterceptors, ClassSerializerInterceptor, Put, Patch, UseGuards, ParseUUIDPipe, Inject, Res, Query } from '@nestjs/common';
 import { UploadedFiles, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator } from '@nestjs/common';
 import { CreateFacturaDto, UpdateFacturaDto, ExportInvoicesDto } from '../dto/factura.dto';
 import { FacturaEntity } from '../entities/factura.entity';
@@ -67,6 +67,57 @@ export class RegistroGastosController {
     async getMisFacturas(@CurrentUser() user: CurrentUserPayload): Promise<FacturaEntity[]> {
         const facturas = await this.registroGastosService.getFacturasByUsuario(user.userId);
         return facturas.map(f => new FacturaEntity(f));
+    }
+
+    @Get('dashboard/resumen')
+    @Roles('SUPERADMIN', 'CONTADOR')
+    @HttpCode(HttpStatus.OK)
+    async getDashboardResumen(
+        @CurrentUser() user: CurrentUserPayload,
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+        @Query('categoriaId') categoriaId?: string,
+        @Query('usuarioId') usuarioId?: string,
+    ): Promise<any> {
+        return await this.registroGastosService.getDashboardResumen(
+            user.organizationId,
+            startDate,
+            endDate,
+            categoriaId,
+            usuarioId,
+        );
+    }
+
+    @Get('dashboard/tendencia-mensual')
+    @Roles('SUPERADMIN', 'CONTADOR')
+    @HttpCode(HttpStatus.OK)
+    async getDashboardTendencia(
+        @CurrentUser() user: CurrentUserPayload,
+        @Query('categoriaId') categoriaId?: string,
+        @Query('usuarioId') usuarioId?: string,
+    ): Promise<any> {
+        return await this.registroGastosService.getDashboardTendencia(
+            user.organizationId,
+            categoriaId,
+            usuarioId,
+        );
+    }
+
+    @Get('dashboard/categorias')
+    @Roles('SUPERADMIN', 'CONTADOR')
+    @HttpCode(HttpStatus.OK)
+    async getDashboardCategorias(
+        @CurrentUser() user: CurrentUserPayload,
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+        @Query('usuarioId') usuarioId?: string,
+    ): Promise<any> {
+        return await this.registroGastosService.getDashboardCategorias(
+            user.organizationId,
+            startDate,
+            endDate,
+            usuarioId,
+        );
     }
 
     @Get(":id")

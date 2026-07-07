@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { RouterLink, RouterModule, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, FileText, PlusCircle, Users, LayoutGrid, LogOut, ChevronRight, ChevronLeft, CreditCard } from 'lucide-angular';
+import { LucideAngularModule, FileText, PlusCircle, Users, LayoutGrid, LogOut, ChevronRight, ChevronLeft, CreditCard, LayoutDashboard } from 'lucide-angular';
 
 @Component({
   selector: 'app-sidebar',
@@ -18,7 +18,8 @@ import { LucideAngularModule, FileText, PlusCircle, Users, LayoutGrid, LogOut, C
         LogOut,
         ChevronRight,
         ChevronLeft,
-        CreditCard
+        CreditCard,
+        LayoutDashboard
       }
   }],
   templateUrl: './sidebar.component.html',

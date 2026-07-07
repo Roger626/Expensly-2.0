@@ -12,4 +12,7 @@ export interface IRegistroGastosRepository {
     updateFactura(id: string, dto: UpdateFacturaDto, organizacionId: string): Promise<FacturaEntity>;
     deleteFactura(id: string, organizacionId: string): Promise<boolean>;
     invoiceExists(organizacionId: string, numFactura: string, rucProveedor: string, cufe: string): Promise<boolean>;
+    getDashboardResumen(orgId: string, start: Date, end: Date, catId?: string, empId?: string): Promise<any>;
+    getDashboardTendencia(orgId: string, catId?: string, empId?: string): Promise<any>;
+    getDashboardCategorias(orgId: string, start: Date, end: Date, empId?: string): Promise<any>;
 }

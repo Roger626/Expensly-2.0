@@ -233,4 +233,221 @@ export class RegistroGastosRepository implements IRegistroGastosRepository {
 
         return false;
     }
+
+    // ==================== Dashboard Queries ====================
+
+    private toNum(val: any): number {
+        if (!val) return 0;
+        if (typeof val.toNumber === 'function') {
+            return val.toNumber();
+        }
+        return Number(val);
+    }
+
+    async getDashboardResumen(
+        orgId: string,
+        start: Date,
+        end: Date,
+        catId?: string,
+        empId?: string,
+    ): Promise<any> {
+        const filterBase: any = {
+            organizacion_id: orgId,
+            fecha_emision: {
+                gte: start,
+                lte: end,
+            },
+        };
+        if (catId) filterBase.categoria_id = catId;
+        if (empId) filterBase.usuario_id = empId;
+
+        const totalsResult = await this.prisma.facturas.aggregate({
+            _sum: {
+                monto_total: true,
+                itbms: true,
+            },
+            where: {
+                ...filterBase,
+                estado: {
+                    not: 'RECHAZADO',
+                },
+            },
+        });
+
+        const gastoTotal = this.toNum(totalsResult._sum.monto_total);
+        const itbmsRecuperable = this.toNum(totalsResult._sum.itbms);
+        const tasaRecuperacion = gastoTotal > 0 ? (itbmsRecuperable / gastoTotal) * 100 : 0;
+
+        const pendingCount = await this.prisma.facturas.count({
+            where: {
+                ...filterBase,
+                estado: 'PENDIENTE',
+            },
+        });
+
+        const limitDate = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        const expiredCount = await this.prisma.facturas.count({
+            where: {
+                ...filterBase,
+                estado: 'PENDIENTE',
+                fecha_subida: {
+                    lt: limitDate,
+                },
+            },
+        });
+
+        const recentInvoices = await this.prisma.facturas.findMany({
+            where: filterBase,
+            orderBy: {
+                fecha_subida: 'desc',
+            },
+            take: 10,
+            include: {
+                usuarios: {
+                    select: {
+                        nombre_completo: true,
+                    },
+                },
+                categorias: {
+                    select: {
+                        nombre: true,
+                    },
+                },
+            },
+        });
+
+        const ultimasTransacciones = recentInvoices.map((f) => ({
+            id: f.id,
+            empleado: f.usuarios?.nombre_completo ?? 'N/A',
+            categoria: f.categorias?.nombre ?? 'Sin categoría',
+            fecha: f.fecha_emision ? f.fecha_emision.toISOString().split('T')[0] : '',
+            montoTotal: this.toNum(f.monto_total),
+            estado: f.estado,
+        }));
+
+        return {
+            gastoTotal,
+            itbmsRecuperable,
+            tasaRecuperacion,
+            aprobacionesPendientes: pendingCount,
+            reportesVencidos: expiredCount,
+            ultimasTransacciones,
+        };
+    }
+
+    async getDashboardTendencia(
+        orgId: string,
+        catId?: string,
+        empId?: string,
+    ): Promise<any> {
+        const now = new Date();
+        const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+        const where: any = {
+            organizacion_id: orgId,
+            estado: {
+                not: 'RECHAZADO',
+            },
+            fecha_emision: {
+                gte: startDate,
+            },
+        };
+        if (catId) where.categoria_id = catId;
+        if (empId) where.usuario_id = empId;
+
+        const facturas = await this.prisma.facturas.findMany({
+            where,
+            select: {
+                monto_total: true,
+                itbms: true,
+                fecha_emision: true,
+            },
+        });
+
+        const monthsList: any[] = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            monthsList.push({
+                mes: key,
+                montoTotal: 0,
+                itbms: 0,
+            });
+        }
+
+        for (const f of facturas) {
+            if (!f.fecha_emision) continue;
+            const date = new Date(f.fecha_emision);
+            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const target = monthsList.find((m) => m.mes === key);
+            if (target) {
+                target.montoTotal += this.toNum(f.monto_total);
+                target.itbms += this.toNum(f.itbms);
+            }
+        }
+
+        return monthsList.map((m) => ({
+            mes: m.mes,
+            montoTotal: Number(m.montoTotal.toFixed(2)),
+            itbms: Number(m.itbms.toFixed(2)),
+        }));
+    }
+
+    async getDashboardCategorias(
+        orgId: string,
+        start: Date,
+        end: Date,
+        empId?: string,
+    ): Promise<any> {
+        const where: any = {
+            organizacion_id: orgId,
+            fecha_emision: {
+                gte: start,
+                lte: end,
+            },
+            estado: {
+                not: 'RECHAZADO',
+            },
+        };
+        if (empId) where.usuario_id = empId;
+
+        const facturas = await this.prisma.facturas.findMany({
+            where,
+            include: {
+                categorias: true,
+            },
+        });
+
+        const categoryMap = new Map<string, { id: string | null; name: string; montoTotal: number; count: number }>();
+        let totalGasto = 0;
+
+        for (const f of facturas) {
+            const catId = f.categoria_id;
+            const catName = f.categorias ? f.categorias.nombre : 'Sin categoría';
+            const monto = this.toNum(f.monto_total);
+            totalGasto += monto;
+
+            const key = catId || 'null';
+            const existing = categoryMap.get(key);
+            if (existing) {
+                existing.montoTotal += monto;
+                existing.count += 1;
+            } else {
+                categoryMap.set(key, {
+                    id: catId,
+                    name: catName,
+                    montoTotal: monto,
+                    count: 1,
+                });
+            }
+        }
+
+        return Array.from(categoryMap.values()).map((cat) => ({
+            id: cat.id,
+            name: cat.name,
+            montoTotal: Number(cat.montoTotal.toFixed(2)),
+            count: cat.count,
+            percentage: totalGasto > 0 ? Number(((cat.montoTotal / totalGasto) * 100).toFixed(2)) : 0,
+        }));
+    }
 }

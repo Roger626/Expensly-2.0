@@ -131,6 +131,44 @@ export class RegistroGastosService {
         return await this.registroGastosRepository.deleteFactura(id, organizacionId);
     }
 
+    async getDashboardResumen(
+        orgId: string,
+        start: string,
+        end: string,
+        catId?: string,
+        empId?: string,
+    ): Promise<any> {
+        return await this.registroGastosRepository.getDashboardResumen(
+            orgId,
+            new Date(start),
+            new Date(end),
+            catId,
+            empId,
+        );
+    }
+
+    async getDashboardTendencia(
+        orgId: string,
+        catId?: string,
+        empId?: string,
+    ): Promise<any> {
+        return await this.registroGastosRepository.getDashboardTendencia(orgId, catId, empId);
+    }
+
+    async getDashboardCategorias(
+        orgId: string,
+        start: string,
+        end: string,
+        empId?: string,
+    ): Promise<any> {
+        return await this.registroGastosRepository.getDashboardCategorias(
+            orgId,
+            new Date(start),
+            new Date(end),
+            empId,
+        );
+    }
+
     /**
      * Redimensiona cada buffer al vuelo si su lado más largo supera `maxPx` **y**
      * el lado corto sigue siendo suficientemente ancho (>= minShort).

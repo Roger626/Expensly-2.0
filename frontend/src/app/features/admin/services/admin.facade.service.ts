@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AdminFacturasService } from './admin-facturas.service';
 import { AdminUsuariosService } from './admin-usuarios.service';
 import { AdminSuscripcionService } from './admin-suscripcion.service';
+import { AdminDashboardService } from './admin-dashboard.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin Facade  (Facade pattern)
@@ -22,8 +23,7 @@ export class AdminFacadeService {
     /** Subscription management (plan, billing, PF config). */
     readonly suscripciones: AdminSuscripcionService,
 
-    // ── Add future admin services here without touching page components ──
-    // readonly categorias: AdminCategoriasService,
-    // readonly reportes:   AdminReportesService,
+    /** Dashboard analysis. */
+    readonly dashboard: AdminDashboardService,
   ) {}
 }
