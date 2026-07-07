@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { IAuthRepository } from '../interfaces/iauth.repository';
-import type { usuarios, sesiones, organizaciones, categorias } from 'generated/prisma/client';
+import type { usuarios, sesiones, organizaciones, categorias } from '../../../../generated/prisma/client';
 import { RegisterUserDto, UpdateUserDto } from '../dto/register-user.dto';
 import { OnboardingCompanyDto, UpdateCompanyDto } from '../dto/onboarding-company.dto';
 
@@ -81,22 +81,19 @@ export class AuthRepository implements IAuthRepository {
     }
 
     async deleteUser(userId: string): Promise<void> {
-        await this.prisma.$transaction(async (tx) => {
-            // 1. Desvincular facturas (SET NULL explícito, sin depender del cascade del DLL)
-            await tx.facturas.updateMany({
-                where: { usuario_id: userId },
-                data:  { usuario_id: null },
-            });
-            // 2. Desvincular logs de auditoría
-            await tx.logs_auditoria.updateMany({
-                where: { usuario_id: userId },
-                data:  { usuario_id: null },
-            });
-            // 3. Eliminar sesiones activas
-            await tx.sesiones.deleteMany({ where: { usuario_id: userId } });
-            // 4. Ahora sí eliminar el usuario
-            await tx.usuarios.delete({ where: { id: userId } });
+        // Desvincular relaciones dependientes antes de eliminar el usuario.
+        await this.prisma.facturas.updateMany({
+            where: { usuario_id: userId },
+            data: { usuario_id: null },
         });
+
+        await this.prisma.logs_auditoria.updateMany({
+            where: { usuario_id: userId },
+            data: { usuario_id: null },
+        });
+
+        await this.prisma.sesiones.deleteMany({ where: { usuario_id: userId } });
+        await this.prisma.usuarios.delete({ where: { id: userId } });
     }
 
     // ==================== Operaciones de Sesión ====================

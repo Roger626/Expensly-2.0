@@ -1,4 +1,4 @@
-import type { usuarios, sesiones, organizaciones } from 'generated/prisma/client';
+import type { usuarios, sesiones, organizaciones } from '../../../../generated/prisma/client';
 import { RegisterUserDto, UpdateUserDto } from '../dto/register-user.dto';
 import { OnboardingCompanyDto, UpdateCompanyDto } from '../dto/onboarding-company.dto';
 

@@ -69,7 +69,7 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   onEmailSubmit(): void {
     this.validateEmail();
     if (this.emailValid) {
-      this.router.navigate(['/auth/register'], { queryParams: { email: this.email.trim() } });
+      this.router.navigate(['/auth/onboarding'], { queryParams: { email: this.email.trim() } });
     }
   }
 

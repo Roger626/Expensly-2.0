@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
@@ -37,12 +37,24 @@ export class OnboardingComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private onboardingService: OnboardingService,
     private authService: AuthService,
     private toastService: ToastService
   ) {}
 
   ngOnInit() {
+    const email = this.route.snapshot.queryParamMap.get('email');
+    if (email) {
+      const currentData = this.onboardingService.getCurrentData();
+      this.onboardingService.updateData({
+        step2: {
+          ...currentData.step2,
+          email,
+        },
+      }, 2);
+    }
+
     this.calculateCurrentStep(); // Initialize
     
     // Subscribe to navigation events
@@ -93,17 +105,22 @@ export class OnboardingComponent implements OnInit {
           if (status === 409) {
             this.toastService.error(
               'Correo ya registrado',
-              error?.error?.message ?? 'El correo electrónico ya está en uso. Intenta con otro.'
+              error?.error?.message ?? 'El correo electrónico ya está en uso o el RUC ya pertenece a otra organización.'
             );
           } else if (status === 400) {
             this.toastService.error(
               'Datos inválidos',
               error?.error?.message ?? 'Revisa los campos e intenta nuevamente.'
             );
+          } else if (status === 504 || status === 408) {
+            this.toastService.error(
+              'Servidor ocupado',
+              error?.error?.message ?? 'La solicitud tardó demasiado. Intenta nuevamente.'
+            );
           } else {
             this.toastService.error(
               'Error al registrar',
-              'Ocurrió un error inesperado. Intenta nuevamente.'
+              error?.error?.message ?? 'Ocurrió un error inesperado. Intenta nuevamente.'
             );
           }
           console.error('Error durante el onboarding', error);

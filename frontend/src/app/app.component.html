@@ -1,4 +1,5 @@
 <app-navbar *ngIf="isfacturaRoute" (logout)="onLogout()"></app-navbar>
+<app-navbar *ngIf="isOnboardingRoute" [minimal]="true"></app-navbar>
 <app-sidebar *ngIf="isAdminRoute"
              (logout)="onLogout()"
              (collapsedChange)="isSidebarCollapsed = $event">
@@ -7,7 +8,7 @@
 <main
   [class.with-sidebar]="isAdminRoute"
   [class.sidebar-collapsed]="isAdminRoute && isSidebarCollapsed"
-  [class.with-navbar]="isfacturaRoute">
+  [class.with-navbar]="isfacturaRoute || isOnboardingRoute">
     <router-outlet/>
 </main>
 

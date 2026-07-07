@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import{ReactiveFormsModule, FormGroup, FormBuilder, Validators} from "@angular/forms"
 import { CommonModule } from '@angular/common';
 import { InputComponent } from '../../../../shared/input/input/input.component';
@@ -17,7 +17,7 @@ import { passwordMatchValidator } from '../../../../shared/validators/password.v
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   registerForm: FormGroup
 
   constructor(private fb: FormBuilder, private router: Router){
@@ -27,6 +27,10 @@ export class RegisterComponent {
       password: ["", [Validators.required, Validators.minLength(6)]],
       confirmPassword: ["", [Validators.required, Validators.minLength(6)]]
     }, { validators: passwordMatchValidator })
+  }
+
+  ngOnInit(): void {
+    this.router.navigate(['/auth/onboarding']);
   }
 
   onSubmit(){

@@ -1,6 +1,6 @@
 import { IsString, IsNumber, IsDateString, IsOptional, Min, IsUUID, IsNotEmpty, IsUrl, IsEnum, ValidateNested, IsArray } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
-import { EstadoFactura } from "generated/prisma/enums";
+import { EstadoFactura } from "../../../../generated/prisma/enums";
 import { Type } from 'class-transformer';
 
 

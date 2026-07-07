@@ -4,4 +4,4 @@ export { OrganizationEntity } from './organization.entity';
 export { AuthResponseEntity, OnboardingResponseEntity } from './auth-response.entity';
 
 // Re-export de enums de Prisma
-export { RolUsuario } from 'generated/prisma/enums';
+export { RolUsuario } from '../../../../generated/prisma/enums';

@@ -1,0 +1,65 @@
+name: expensly
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-expensly}
+      POSTGRES_USER: ${POSTGRES_USER:-expensly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgressql}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Solo accesible desde localhost del VPS (127.0.0.1), nunca desde internet.
+    # Para conectar DBeaver desde tu máquina, usa un túnel SSH hacia el VPS
+    # apuntando a 127.0.0.1:5432 — no se necesita abrir el puerto en el firewall.
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-expensly} -d ${POSTGRES_DB:-expensly}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=postgresql://${POSTGRES_USER:-expensly}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-expensly}?schema=public
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-expensly}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-expensly}?schema=public
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-1d}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      AZURE_OCR_ENDPOINT: ${AZURE_OCR_ENDPOINT}
+      AZURE_OCR_KEY: ${AZURE_OCR_KEY}
+      BREVO_USER: ${BREVO_USER}
+      BREVO_PASS: ${BREVO_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  postgres_data:

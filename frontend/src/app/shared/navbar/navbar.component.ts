@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../features/auth/services/auth.service';
 import { inject } from '@angular/core';
@@ -11,6 +11,9 @@ import { inject } from '@angular/core';
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent {
+
+  /** Variante reducida: solo logo + link "Inicio", sin links de la app ni usuario/logout. */
+  @Input() minimal: boolean = false;
 
   @Output() logout = new EventEmitter<void>();
 
