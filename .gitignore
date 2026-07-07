@@ -1,0 +1,14 @@
+.atl/
+
+# Environment files — never commit secrets
+.env
+.env.*
+env
+*.env
+backend/.env
+frontend/.env
+
+# .env.example IS committable (placeholders only, no real secrets)
+!.env.example
+!backend/.env.example
+!frontend/.env.example

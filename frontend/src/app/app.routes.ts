@@ -24,6 +24,13 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/admin/admin.routes').then(m => m.adminRoutes),
   },
+  {
+    // Módulo de facturación / suscripción: solo accesible para SUPERADMIN
+    path: 'cuenta',
+    canActivate: [authGuard, roleGuard([Role.SUPERADMIN])],
+    loadChildren: () =>
+      import('./features/cuenta/cuenta.routes').then(m => m.cuentaRoutes),
+  },
 
   {
     path: '',

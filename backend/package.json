@@ -97,8 +97,15 @@
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      ".*\\.integration\\.spec\\.ts$"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^generated/(.*)$": "<rootDir>/../generated/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

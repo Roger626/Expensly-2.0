@@ -1,0 +1,54 @@
+<div class="historial-container">
+  <h2>Historial de pagos</h2>
+
+  @if (loading) {
+    <p>Cargando...</p>
+  } @else if (error) {
+    <p class="error">{{ error }}</p>
+  } @else if (pagos.length === 0) {
+    <p class="empty">No hay pagos registrados aún.</p>
+  } @else {
+    <table class="pagos-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Fecha</th>
+          <th>Monto</th>
+          <th>Estado</th>
+          <th>Tipo</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of pagos; track p.id) {
+          <tr>
+            <td>{{ p.cod_oper }}</td>
+            <td>{{ p.fecha | date:'mediumDate' }}</td>
+            <td>${{ p.monto }}</td>
+            <td>{{ p.estado }}</td>
+            <td>{{ p.operation_type }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button
+          class="historial-btn historial-btn-secondary historial-btn-sm"
+          [disabled]="currentPage === 1"
+          (click)="cambiarPagina(currentPage - 1)"
+        >
+          Anterior
+        </button>
+        <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
+        <button
+          class="historial-btn historial-btn-secondary historial-btn-sm"
+          [disabled]="currentPage >= totalPages"
+          (click)="cambiarPagina(currentPage + 1)"
+        >
+          Siguiente
+        </button>
+      </div>
+    }
+  }
+</div>

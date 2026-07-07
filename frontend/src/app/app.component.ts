@@ -45,7 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private checkRoute(url: string) {
-    this.isAdminRoute    = url.startsWith('/admin');
+    this.isAdminRoute    = url.startsWith('/admin') || url.startsWith('/cuenta');
     this.isfacturaRoute  = url.startsWith('/facturas');
   }
 

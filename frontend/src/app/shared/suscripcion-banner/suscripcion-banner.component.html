@@ -1,0 +1,14 @@
+@if (visible && suscripcion) {
+  <div [class]="'suscripcion-banner banner-' + suscripcion.estado.toLowerCase()">
+    @if (suscripcion.estado === 'Trial') {
+      <span>Tu prueba termina el {{ suscripcion.trial_termina_en | date:'mediumDate' }}</span>
+    }
+    @if (suscripcion.estado === 'Suspendida') {
+      <span>Suscripción suspendida — </span>
+      <a [routerLink]="['/cuenta/facturacion']">agregá una tarjeta</a>
+    }
+    @if (suscripcion.estado === 'PendientePago') {
+      <span>Pago pendiente — actualizá tu método de pago</span>
+    }
+  </div>
+}

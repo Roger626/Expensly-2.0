@@ -7,6 +7,7 @@ import { UserTableComponent, MenuAccionEvent } from '../../components/user-table
 import { UserInviteModalComponent, InvitarEvent } from '../../components/user-invite-modal/user-invite-modal.component';
 import { UserRoleGuideComponent } from '../../components/user-role-guide/user-role-guide.component';
 import { UserActionModalComponent, ActionModalMode, RolCambiadoEvent } from '../../components/user-action-modal/user-action-modal.component';
+import { SuscripcionBannerComponent } from '../../../../shared/suscripcion-banner/suscripcion-banner.component';
 import { AdminFacadeService } from '../../services/admin.facade.service';
 import { UsuarioTabla, ROL_DISPLAY_TO_BACKEND } from '../../models/usuario.model';
 
@@ -20,6 +21,7 @@ import { UsuarioTabla, ROL_DISPLAY_TO_BACKEND } from '../../models/usuario.model
     UserInviteModalComponent,
     UserRoleGuideComponent,
     UserActionModalComponent,
+    SuscripcionBannerComponent,
   ],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css'

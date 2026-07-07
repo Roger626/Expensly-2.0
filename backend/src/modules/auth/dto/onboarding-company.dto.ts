@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min, MinLength, MaxLength, IsEmail, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsIn, MinLength, MaxLength, IsEmail, IsUUID } from 'class-validator';
 
 export class OnboardingCompanyDto {
     @IsString()
@@ -19,8 +19,11 @@ export class OnboardingCompanyDto {
     @MaxLength(2)
     dv: string;
 
+    // NOTE: The field is spelled "subscripcion" (correct spelling).
+    // The "subscriocion" typo on UpdateCompanyDto:55 is intentionally kept for backward compat.
     @IsString()
     @IsOptional()
+    @IsIn(['basic', 'pro', 'premium'], { message: 'El plan debe ser basic, pro o premium' })
     @MaxLength(50)
     subscripcion?: string | null;
 

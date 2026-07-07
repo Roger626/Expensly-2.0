@@ -178,6 +178,31 @@ export class AuthRepository implements IAuthRepository {
         return org;
     }
 
+    // ==================== Operaciones de Suscripción ====================
+
+    async createSuscripcionTrial(
+        organizacionId: string,
+        plan: string,
+        trialIniciaEn: Date,
+        trialTerminaEn: Date,
+    ): Promise<void> {
+        await this.prisma.suscripciones.create({
+            data: {
+                organizacion_id: organizacionId,
+                plan,
+                estado: 'Trial',
+            },
+        });
+        // Update trial dates on organizaciones (reviewer fix #1: trial dates on org, NOT suscripciones)
+        await this.prisma.organizaciones.update({
+            where: { id: organizacionId },
+            data: {
+                trial_inicia_en: trialIniciaEn,
+                trial_termina_en: trialTerminaEn,
+            },
+        });
+    }
+
     async updateOrganization(organizationId: string, data: UpdateCompanyDto): Promise<organizaciones> {
         const updateData: any = {};
         

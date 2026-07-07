@@ -25,6 +25,9 @@ export interface IAuthRepository {
     createOrganization(data: OnboardingCompanyDto): Promise<organizaciones>;
     updateOrganization(organizationId: string, data: UpdateCompanyDto): Promise<organizaciones>;
     
+    // Operaciones de Suscripción
+    createSuscripcionTrial(organizacionId: string, plan: string, trialIniciaEn: Date, trialTerminaEn: Date): Promise<void>;
+    
     // Consultas de organización
     findUsersByOrganizationId(organizationId: string): Promise<usuarios[]>;
 

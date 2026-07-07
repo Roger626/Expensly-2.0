@@ -1,0 +1,90 @@
+<div class="cuenta-container">
+  @if (loading) {
+    <p>Cargando suscripción...</p>
+  } @else if (error) {
+    <p class="error">{{ error }}</p>
+  } @else if (suscripcion) {
+    <div class="subscription-card">
+      <h2>Plan {{ planName }}</h2>
+
+      <span [class]="estadoClass">{{ suscripcion.estado }}</span>
+
+      @if (suscripcion.estado === 'Trial' && suscripcion.trial_termina_en) {
+        <p class="trial-info">
+          Tu prueba termina el {{ suscripcion.trial_termina_en | date:'mediumDate' }}
+        </p>
+      }
+
+      @if (suscripcion.estado === 'Activa' && suscripcion.current_period_end) {
+        <p class="renewal-info">
+          Próxima renovación: {{ suscripcion.current_period_end | date:'mediumDate' }}
+        </p>
+      }
+
+      @if (suscripcion.display_num) {
+        <p class="card-info">Tarjeta terminada en {{ suscripcion.display_num }}</p>
+      }
+
+      <div class="actions">
+        @if (suscripcion.estado !== 'Cancelada') {
+          <button class="cuenta-btn cuenta-btn-primary" (click)="openUpgradeModal()">
+            Subir a plan
+          </button>
+        }
+        @if (!suscripcion.card_token) {
+          <button class="cuenta-btn cuenta-btn-secondary" (click)="showCardForm = true">
+            Agregar tarjeta
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (showCardForm) {
+      <div class="card-form-section">
+        <h3>Agregar método de pago — Plan {{ selectedPlan }}</h3>
+        <p class="plan-price">${{ planPrice }} USD</p>
+        <p class="redirect-info">
+          Serás redirigido al sitio seguro de Paguelo Fácil para completar el pago.
+        </p>
+        <button
+          class="cuenta-btn cuenta-btn-primary"
+          [disabled]="creatingEnlace"
+          (click)="iniciarPago()"
+        >
+          @if (creatingEnlace) {
+            Creando enlace de pago...
+          } @else {
+            Pagar ${{ planPrice }} USD con tarjeta
+          }
+        </button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Upgrade modal -->
+<app-modal
+  [visible]="showUpgradeModal"
+  title="Cambiar de plan"
+  variant="info"
+  (closed)="cancelUpgrade()"
+>
+  <div class="plan-cards">
+    @for (p of ['basic', 'pro', 'premium']; track p) {
+      <div
+        class="plan-card"
+        [class.selected]="selectedPlan === p"
+        (click)="selectPlan($any(p))"
+      >
+        <h4>{{ p === 'basic' ? 'Basic' : p === 'pro' ? 'Pro' : 'Premium' }}</h4>
+        <p class="plan-card-price">
+          {{ getPrice(p) }} / mes
+        </p>
+      </div>
+    }
+  </div>
+  <div class="modal-actions">
+    <button class="cuenta-btn cuenta-btn-primary" (click)="confirmUpgrade()">Confirmar</button>
+    <button class="cuenta-btn cuenta-btn-secondary" (click)="cancelUpgrade()">Cancelar</button>
+  </div>
+</app-modal>

@@ -5,6 +5,7 @@ import { take } from 'rxjs/operators';
 import { InvoiceListComponent } from '../../components/invoice-list/invoice-list.component';
 import { InvoiceFilterComponent } from '../../components/invoice-filter/invoice-filter.component';
 import { InvoiceAuditModalComponent, AuditApproveEvent, AuditRejectEvent } from '../../../../shared/invoice-audit-modal/invoice-audit-modal.component';
+import { SuscripcionBannerComponent } from '../../../../shared/suscripcion-banner/suscripcion-banner.component';
 import { AdminFacadeService } from '../../services/admin.facade.service';
 import { InvoiceFilterState, DEFAULT_FILTER } from '../../models/invoice-filter-state.model';
 import { Factura } from '../../../registro-factura/models/factura.model';
@@ -13,7 +14,7 @@ import { ToastService } from '../../../../shared/toast/toast.service';
 @Component({
   selector: 'app-facturas',
   standalone: true,
-  imports: [CommonModule, InvoiceListComponent, InvoiceFilterComponent, InvoiceAuditModalComponent],
+  imports: [CommonModule, InvoiceListComponent, InvoiceFilterComponent, InvoiceAuditModalComponent, SuscripcionBannerComponent],
   templateUrl: './facturas.component.html',
   styleUrl: './facturas.component.css',
 })

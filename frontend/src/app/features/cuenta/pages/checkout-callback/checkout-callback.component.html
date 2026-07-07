@@ -1,0 +1,26 @@
+<div class="checkout-callback-container">
+  @if (loading) {
+    <div class="callback-loading">
+      <p>Procesando tu pago...</p>
+      <small>Por favor esperá, estamos confirmando la transacción.</small>
+    </div>
+  } @else if (error) {
+    <div class="callback-error">
+      <p>Error al confirmar el pago</p>
+      <small>{{ error }}</small>
+      <button class="callback-btn" (click)="volver()">Volver a Facturación</button>
+    </div>
+  } @else if (pendiente) {
+    <div class="callback-pending">
+      <p>Pago pendiente</p>
+      <small>Tu pago está siendo procesado. Te notificaremos cuando se confirme.</small>
+      <button class="callback-btn" (click)="volver()">Volver a Facturación</button>
+    </div>
+  } @else if (denegada) {
+    <div class="callback-denied">
+      <p>Pago denegado</p>
+      <small>{{ razon || 'La transacción fue rechazada por el banco emisor.' }}</small>
+      <button class="callback-btn" (click)="volver()">Intentar de nuevo</button>
+    </div>
+  }
+</div>

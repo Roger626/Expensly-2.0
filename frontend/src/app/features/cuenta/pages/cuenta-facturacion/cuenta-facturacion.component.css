@@ -1,0 +1,188 @@
+/* ============================================================
+   Cuenta Facturación Page
+   ============================================================ */
+
+.cuenta-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ─── Subscription Card ─────────────────────────────────────────── */
+.subscription-card {
+  background: #fff;
+  border: 1px solid var(--exp-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.subscription-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-family: 'Quicksand', sans-serif;
+}
+
+/* ─── Badges ────────────────────────────────────────────────────── */
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.badge-success {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.badge-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Quicksand', sans-serif;
+}
+
+/* ─── Info lines ────────────────────────────────────────────────── */
+.trial-info,
+.renewal-info,
+.card-info {
+  margin: 0.75rem 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* ─── Actions ────────────────────────────────────────────────────── */
+.actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cuenta-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.cuenta-btn-primary {
+  background: var(--exp-primary, #2563eb);
+  color: #fff;
+}
+
+.cuenta-btn-secondary {
+  background: var(--exp-gray-bg, #f8f9fa);
+  color: #374151;
+  border: 1px solid var(--exp-border, #d1d5db);
+}
+
+/* ─── Card form section ─────────────────────────────────────────── */
+.card-form-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--exp-gray-bg, #f9fafb);
+  border-radius: 12px;
+  border: 1px solid var(--exp-border, #e5e7eb);
+}
+
+.card-form-section h3 {
+  margin: 0 0 0.25rem;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.plan-price {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.redirect-info {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* ─── Plan cards ────────────────────────────────────────────────── */
+.plan-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.plan-card {
+  flex: 1;
+  border: 2px solid var(--exp-border, #e5e7eb);
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.plan-card:hover {
+  border-color: #93c5fd;
+}
+
+.plan-card.selected {
+  border-color: var(--exp-primary, #2563eb);
+  background: var(--exp-accent, #eff6ff);
+}
+
+.plan-card h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-family: 'Quicksand', sans-serif;
+}
+
+.plan-card-price {
+  margin: 0;
+  font-weight: 700;
+  color: var(--exp-primary, #2563eb);
+}
+
+/* ─── Modal actions ─────────────────────────────────────────────── */
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* ─── Error ─────────────────────────────────────────────────────── */
+.error {
+  color: #dc2626;
+}

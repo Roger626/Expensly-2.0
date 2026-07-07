@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { OnboardingData, OnboardingResponse } from '../models/onboarding.dto';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -8,6 +9,7 @@ import { environment } from '../../../../environments/environment';
     providedIn: 'root'
 })
 export class OnboardingService {
+    private readonly route = inject(ActivatedRoute);
     private onboardingDataSubject = new BehaviorSubject<OnboardingData>({
         step1: {
             companyNombre: '',
@@ -42,11 +44,15 @@ export class OnboardingService {
     submitOnboardingData(): Observable<OnboardingResponse> {
         const { step1, step2 } = this.onboardingDataSubject.value;
 
+        // Read plan from query param (set by landing CTA: ?plan=basic|pro|premium)
+        const planFromQuery = this.route.snapshot.queryParamMap.get('plan');
+
         const payload = {
             company: {
                 razonSocial: step1.companyNombre,
                 ruc: step1.ruc,
                 dv: step1.dv,
+                subscripcion: planFromQuery ?? 'basic',
             },
             admin: {
                 name: step2.nombre,

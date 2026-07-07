@@ -1,0 +1,40 @@
+/* ─── Checkout Callback ──────────────────────────────────────────── */
+
+.checkout-callback-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* ─── States ─────────────────────────────────────────────────────── */
+
+.callback-loading,
+.callback-error,
+.callback-pending,
+.callback-denied {
+  max-width: 400px;
+}
+
+.callback-error {
+  color: var(--exp-red, #dc3545);
+}
+
+.callback-denied {
+  color: var(--exp-red, #dc3545);
+}
+
+.callback-pending {
+  color: var(--exp-yellow, #f59e0b);
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────── */
+
+.callback-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  font-family: 'Quicksand', sans-serif;
+}
