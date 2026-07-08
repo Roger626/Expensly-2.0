@@ -32,6 +32,11 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-expensly}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-expensly}?schema=public
+      # Se usa para armar los links de los correos de invitación/recuperación
+      # que abre el USUARIO en su propio navegador — no es para comunicación
+      # entre contenedores. El default de abajo solo sirve en tu máquina de
+      # desarrollo local. En el VPS, define FRONTEND_URL en tu .env con la IP
+      # pública o el dominio del servidor (ver .env.example).
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-1d}
@@ -48,8 +53,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
 
   frontend:
     build:
