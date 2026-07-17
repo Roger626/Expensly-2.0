@@ -90,10 +90,55 @@ describe('RegistroGastosRepository — Dashboard Methods', () => {
       expect(res.reportesVencidos).toBe(0);
       expect(res.ultimasTransacciones).toEqual([]);
     });
+
+    it('calculates variación vs. an equal-length previous period', async () => {
+      // Rango pedido: 16 días (15 ene - 31 ene). El periodo anterior debe ser
+      // los 16 días inmediatamente anteriores (30 dic - 15 ene).
+      const start = new Date('2026-01-15');
+      const end = new Date('2026-01-31');
+
+      (prisma.facturas.aggregate as jest.Mock)
+        .mockResolvedValueOnce({ _sum: { monto_total: { toNumber: () => 220 } as any, itbms: { toNumber: () => 20 } as any } }) // periodo actual
+        .mockResolvedValueOnce({ _sum: { monto_total: { toNumber: () => 200 } as any, itbms: { toNumber: () => 10 } as any } }); // periodo anterior
+
+      (prisma.facturas.count as jest.Mock).mockResolvedValue(0);
+      (prisma.facturas.findMany as jest.Mock).mockResolvedValue([]);
+
+      const res = await repo.getDashboardResumen(ORG_ID, start, end);
+
+      expect(res.gastoTotal).toBe(220);
+      // (220-200)/200 * 100 = 10%
+      expect(res.variacionGastoTotal).toBeCloseTo(10, 1);
+      // (20-10)/10 * 100 = 100%
+      expect(res.variacionItbmsRecuperable).toBeCloseTo(100, 1);
+
+      // Verifica que el rango del periodo anterior sea el inmediatamente
+      // previo, de igual duración (16 días).
+      const prevCallArgs = (prisma.facturas.aggregate as jest.Mock).mock.calls[1][0];
+      expect(prevCallArgs.where.fecha_emision.lt).toEqual(start);
+      expect(prevCallArgs.where.fecha_emision.gte).toEqual(new Date('2025-12-30'));
+    });
+
+    it('returns null variación fields when the previous period has no data (avoids divide-by-zero)', async () => {
+      const start = new Date('2026-01-01');
+      const end = new Date('2026-01-31');
+
+      (prisma.facturas.aggregate as jest.Mock)
+        .mockResolvedValueOnce({ _sum: { monto_total: { toNumber: () => 500 } as any, itbms: { toNumber: () => 35 } as any } }) // actual
+        .mockResolvedValueOnce({ _sum: { monto_total: null, itbms: null } }); // anterior (sin datos)
+
+      (prisma.facturas.count as jest.Mock).mockResolvedValue(0);
+      (prisma.facturas.findMany as jest.Mock).mockResolvedValue([]);
+
+      const res = await repo.getDashboardResumen(ORG_ID, start, end);
+
+      expect(res.variacionGastoTotal).toBeNull();
+      expect(res.variacionItbmsRecuperable).toBeNull();
+    });
   });
 
   describe('getDashboardTendencia', () => {
-    it('returns monthly spend trend for the last 6 months', async () => {
+    it('returns monthly spend trend for the last 6 months when no date range is given', async () => {
       const mockFacturas = [
         {
           monto_total: { toNumber: () => 150.00 } as any,
@@ -109,6 +154,50 @@ describe('RegistroGastosRepository — Dashboard Methods', () => {
       const currentMonth = res[5];
       expect(currentMonth.montoTotal).toBe(150.00);
       expect(currentMonth.itbms).toBe(10.50);
+    });
+
+    it('honors an explicit date range instead of the fixed 6-month window', async () => {
+      (prisma.facturas.findMany as jest.Mock).mockResolvedValue([]);
+
+      // Rango de 3 meses: enero a marzo 2026.
+      const res = await repo.getDashboardTendencia(
+        ORG_ID, undefined, undefined,
+        new Date('2026-01-01'), new Date('2026-03-31'),
+      );
+
+      expect(res).toHaveLength(3);
+      expect(res.map((m: any) => m.mes)).toEqual(['2026-01', '2026-02', '2026-03']);
+    });
+
+    it('caps to the last 12 months when the requested range is wider', async () => {
+      (prisma.facturas.findMany as jest.Mock).mockResolvedValue([]);
+
+      // Rango de 24 meses (2024-01 a 2025-12) — debe capar a los últimos 12.
+      const res = await repo.getDashboardTendencia(
+        ORG_ID, undefined, undefined,
+        new Date('2024-01-01'), new Date('2025-12-31'),
+      );
+
+      expect(res).toHaveLength(12);
+      expect(res[0].mes).toBe('2025-01');
+      expect(res[11].mes).toBe('2025-12');
+    });
+
+    it('aggregates invoices into the correct month bucket within a custom range', async () => {
+      const mockFacturas = [
+        { monto_total: { toNumber: () => 100 } as any, itbms: { toNumber: () => 7 } as any, fecha_emision: new Date('2026-02-15') },
+        { monto_total: { toNumber: () => 50 } as any, itbms: { toNumber: () => 3.5 } as any, fecha_emision: new Date('2026-02-20') },
+      ];
+      (prisma.facturas.findMany as jest.Mock).mockResolvedValue(mockFacturas);
+
+      const res = await repo.getDashboardTendencia(
+        ORG_ID, undefined, undefined,
+        new Date('2026-01-01'), new Date('2026-03-31'),
+      );
+
+      const feb = res.find((m: any) => m.mes === '2026-02');
+      expect(feb.montoTotal).toBe(150);
+      expect(feb.itbms).toBeCloseTo(10.5, 1);
     });
   });
 

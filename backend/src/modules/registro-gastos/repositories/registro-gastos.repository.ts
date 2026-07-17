@@ -89,6 +89,8 @@ export class RegistroGastosRepository implements IRegistroGastosRepository {
                 numero_factura: dto.numeroFactura,
                 cufe: dto.cufe,
                 estado: 'PENDIENTE',
+                origen_extraccion: dto.origenExtraccion ?? null,
+                confianza_extraccion: dto.confianzaExtraccion ?? undefined,
                 factura_tags: dto.facturaTags && dto.facturaTags.length > 0
                     ? {
                         create: dto.facturaTags.map((tagId) => ({
@@ -278,6 +280,36 @@ export class RegistroGastosRepository implements IRegistroGastosRepository {
         const itbmsRecuperable = this.toNum(totalsResult._sum.itbms);
         const tasaRecuperacion = gastoTotal > 0 ? (itbmsRecuperable / gastoTotal) * 100 : 0;
 
+        // Periodo anterior de igual duración, para calcular variación (ej. "↑ 8% vs. periodo previo").
+        // Ej. si el rango pedido es [15 ene, 31 ene] (16 días), el anterior es [30 dic, 15 ene).
+        const durationMs = end.getTime() - start.getTime();
+        const prevEnd = start;
+        const prevStart = new Date(start.getTime() - durationMs);
+
+        const prevFilterBase: any = {
+            organizacion_id: orgId,
+            fecha_emision: { gte: prevStart, lt: prevEnd },
+        };
+        if (catId) prevFilterBase.categoria_id = catId;
+        if (empId) prevFilterBase.usuario_id = empId;
+
+        const prevTotalsResult = await this.prisma.facturas.aggregate({
+            _sum: { monto_total: true, itbms: true },
+            where: { ...prevFilterBase, estado: { not: 'RECHAZADO' } },
+        });
+
+        const gastoTotalAnterior = this.toNum(prevTotalsResult._sum.monto_total);
+        const itbmsRecuperableAnterior = this.toNum(prevTotalsResult._sum.itbms);
+
+        // null (no un porcentaje calculado de 0) cuando no hay base de comparación —
+        // evita mostrar "∞%" o un falso "+100%" cuando el periodo anterior no tuvo gastos.
+        const variacionGastoTotal = gastoTotalAnterior > 0
+            ? Number((((gastoTotal - gastoTotalAnterior) / gastoTotalAnterior) * 100).toFixed(1))
+            : null;
+        const variacionItbmsRecuperable = itbmsRecuperableAnterior > 0
+            ? Number((((itbmsRecuperable - itbmsRecuperableAnterior) / itbmsRecuperableAnterior) * 100).toFixed(1))
+            : null;
+
         const pendingCount = await this.prisma.facturas.count({
             where: {
                 ...filterBase,
@@ -329,6 +361,8 @@ export class RegistroGastosRepository implements IRegistroGastosRepository {
             gastoTotal,
             itbmsRecuperable,
             tasaRecuperacion,
+            variacionGastoTotal,
+            variacionItbmsRecuperable,
             aprobacionesPendientes: pendingCount,
             reportesVencidos: expiredCount,
             ultimasTransacciones,
@@ -339,9 +373,19 @@ export class RegistroGastosRepository implements IRegistroGastosRepository {
         orgId: string,
         catId?: string,
         empId?: string,
+        start?: Date,
+        end?: Date,
     ): Promise<any> {
+        // Sin rango explícito: comportamiento original (últimos 6 meses fijos).
+        // Todo el cálculo de meses usa getters/constructores UTC (no locales):
+        // `fecha_emision` es un @db.Date (fecha calendario sin huso horario) y
+        // `start`/`end` llegan de un string ISO "YYYY-MM-DD" (new Date() lo
+        // parsea como medianoche UTC). Mezclar eso con getters locales corría
+        // el mes hacia atrás en servidores con offset negativo (ej. Panamá,
+        // UTC-5): medianoche UTC del día 1 es 31 del mes anterior en hora local.
         const now = new Date();
-        const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+        const startDate = start ?? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1));
+        const endDate = end ?? now;
 
         const where: any = {
             organizacion_id: orgId,
@@ -350,6 +394,7 @@ export class RegistroGastosRepository implements IRegistroGastosRepository {
             },
             fecha_emision: {
                 gte: startDate,
+                lte: endDate,
             },
         };
         if (catId) where.categoria_id = catId;
@@ -364,21 +409,31 @@ export class RegistroGastosRepository implements IRegistroGastosRepository {
             },
         });
 
+        // Buckets mensuales desde el mes de startDate hasta el de endDate, capado a
+        // los últimos 12 si el rango pedido es más ancho (evita payloads gigantes).
+        let cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1));
+        const lastMonth = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 1));
+        const monthsSpan = (lastMonth.getUTCFullYear() - cursor.getUTCFullYear()) * 12
+            + (lastMonth.getUTCMonth() - cursor.getUTCMonth()) + 1;
+        if (monthsSpan > 12) {
+            cursor = new Date(Date.UTC(lastMonth.getUTCFullYear(), lastMonth.getUTCMonth() - 11, 1));
+        }
+
         const monthsList: any[] = [];
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        while (cursor <= lastMonth) {
+            const key = `${cursor.getUTCFullYear()}-${String(cursor.getUTCMonth() + 1).padStart(2, '0')}`;
             monthsList.push({
                 mes: key,
                 montoTotal: 0,
                 itbms: 0,
             });
+            cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
         }
 
         for (const f of facturas) {
             if (!f.fecha_emision) continue;
             const date = new Date(f.fecha_emision);
-            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
             const target = monthsList.find((m) => m.mes === key);
             if (target) {
                 target.montoTotal += this.toNum(f.monto_total);

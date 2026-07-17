@@ -22,6 +22,10 @@ export class FacturaProcesamientoResult {
     nombreProveedor: string;
     cufe: string;
     numeroFactura: string;
+    /** Origen del dato: QR_DGI | QR_GENERICO_LLM | OCR_LLM | OCR_LLM_VISION */
+    origenExtraccion?: string;
+    /** Confianza por campo ('alta'|'media'|'baja'), cuando el origen es un LLM */
+    confianzaExtraccion?: Record<string, string>;
     urlImagen?: string;
     /** Todas las URLs de Cloudinary (una por imagen subida) */
     imageUrls?: string[];

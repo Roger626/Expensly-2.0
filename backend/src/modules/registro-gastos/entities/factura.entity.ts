@@ -82,6 +82,16 @@ export class FacturaEntity {
   @Transform(({ obj }) => obj.cufe)
   cufe?: string;
 
+  // ========= Metadata de extracción =========
+
+  @Expose()
+  @Transform(({ obj }) => obj.origen_extraccion)
+  origenExtraccion?: string;
+
+  @Expose()
+  @Transform(({ obj }) => obj.confianza_extraccion)
+  confianzaExtraccion?: Record<string, string>;
+
   // ========= Documento =========
 
   // Eliminado del response JSON

@@ -9,4 +9,6 @@ export interface IStorageService {
      */
     makePermanent(publicId: string): Promise<string>;
     deleteFile(publicId: string): Promise<void>;
+    /** Lista publicIds bajo expensly/temp/ subidos hace más de `hours` horas (para el cron de limpieza). */
+    listTempOlderThan(hours: number): Promise<string[]>;
 }

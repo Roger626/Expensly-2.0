@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, Param, Delete, HttpCode, HttpStatus, UseInterceptors, ClassSerializerInterceptor, Put, Patch, UseGuards, ParseUUIDPipe, Inject, Res, Query } from '@nestjs/common';
 import { UploadedFiles, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CreateFacturaDto, UpdateFacturaDto, ExportInvoicesDto } from '../dto/factura.dto';
 import { FacturaEntity } from '../entities/factura.entity';
 import { RegistroGastosService } from '../services/registro-gastos.service';
@@ -27,6 +28,9 @@ export class RegistroGastosController {
     @Post("procesar-factura")
     @UseInterceptors(FilesInterceptor('files', 10))
     @HttpCode(HttpStatus.OK)
+    // Límite más estricto que el global: este endpoint dispara llamadas pagadas
+    // a Azure OCR + Azure OpenAI + scraping DGI, es el de mayor costo por abuso.
+    @Throttle({ default: { ttl: 60_000, limit: 10 } })
     async invoiceProcessing(
         @UploadedFiles(
             new ParseFilePipe({
@@ -95,11 +99,15 @@ export class RegistroGastosController {
         @CurrentUser() user: CurrentUserPayload,
         @Query('categoriaId') categoriaId?: string,
         @Query('usuarioId') usuarioId?: string,
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string,
     ): Promise<any> {
         return await this.registroGastosService.getDashboardTendencia(
             user.organizationId,
             categoriaId,
             usuarioId,
+            startDate,
+            endDate,
         );
     }
 

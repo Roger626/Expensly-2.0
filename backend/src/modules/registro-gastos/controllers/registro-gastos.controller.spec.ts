@@ -77,7 +77,30 @@ describe('RegistroGastosController — Dashboard Endpoints', () => {
     expect(serviceMock.getDashboardTendencia).toHaveBeenCalledWith(
       ORG_ID,
       'cat-1',
-      'emp-1'
+      'emp-1',
+      undefined,
+      undefined,
+    );
+  });
+
+  it('GET /dashboard/tendencia-mensual passes an optional date range to the service', async () => {
+    serviceMock.getDashboardTendencia.mockResolvedValue([]);
+
+    const result = await controller.getDashboardTendencia(
+      userPayload,
+      'cat-1',
+      'emp-1',
+      '2026-01-01',
+      '2026-03-31',
+    );
+
+    expect(result).toEqual([]);
+    expect(serviceMock.getDashboardTendencia).toHaveBeenCalledWith(
+      ORG_ID,
+      'cat-1',
+      'emp-1',
+      '2026-01-01',
+      '2026-03-31',
     );
   });
 

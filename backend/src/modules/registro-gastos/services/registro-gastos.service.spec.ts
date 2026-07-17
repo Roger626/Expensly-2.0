@@ -47,7 +47,22 @@ describe('RegistroGastosService — Dashboard Methods', () => {
     const res = await service.getDashboardTendencia('org-1', 'cat-1', 'emp-1');
 
     expect(res).toEqual([]);
-    expect(repoMock.getDashboardTendencia).toHaveBeenCalledWith('org-1', 'cat-1', 'emp-1');
+    expect(repoMock.getDashboardTendencia).toHaveBeenCalledWith('org-1', 'cat-1', 'emp-1', undefined, undefined);
+  });
+
+  it('getDashboardTendencia parses an optional date range and calls repository', async () => {
+    repoMock.getDashboardTendencia.mockResolvedValue([]);
+
+    const res = await service.getDashboardTendencia('org-1', 'cat-1', 'emp-1', '2026-01-01', '2026-03-31');
+
+    expect(res).toEqual([]);
+    expect(repoMock.getDashboardTendencia).toHaveBeenCalledWith(
+      'org-1',
+      'cat-1',
+      'emp-1',
+      new Date('2026-01-01'),
+      new Date('2026-03-31'),
+    );
   });
 
   it('getDashboardCategorias parses start/end dates and calls repository', async () => {
@@ -64,3 +79,4 @@ describe('RegistroGastosService — Dashboard Methods', () => {
     );
   });
 });
+

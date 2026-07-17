@@ -1,6 +1,8 @@
-import { FacturaProcesamientoResult } from "src/modules/registro-gastos/strategies/factura-procesar.strategy.interface";
-
 export interface ProcessInvoice {
-    /** Recibe uno o más buffers (páginas de la misma factura) y devuelve los datos parseados */
-    processInvoice(fileBuffers: Buffer[]): Promise<FacturaProcesamientoResult>;
+  /**
+   * Recibe uno o más buffers (páginas/cortes de la misma factura) y devuelve
+   * el texto plano extraído de cada imagen (mismo orden, un string por buffer).
+   * No hace ningún parsing/entendimiento de campos — eso lo hace ILlmService.
+   */
+  extractText(fileBuffers: Buffer[]): Promise<string[]>;
 }

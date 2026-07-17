@@ -13,11 +13,12 @@ import { IProcesarFacturaStrategy } from './strategies/factura-procesar.strategy
 import { AuthModule } from '../auth/auth.module';
 import { StorageModule } from 'src/infrastructure/storage/storage.module';
 import { OcrModule } from 'src/infrastructure/ocr/ocr.module';
+import { LlmModule } from 'src/infrastructure/llm/llm.module';
 import { REGISTRO_GASTOS_REPOSITORY, CATEGORIA_REPOSITORY, EXPORT_STRATEGY } from './registro-gastos.tokens';
 import { ExcelService } from 'src/infrastructure/storage/excel.service';
 
 @Module({
-    imports: [PrismaModule, AuthModule, StorageModule, OcrModule],
+    imports: [PrismaModule, AuthModule, StorageModule, OcrModule, LlmModule],
     controllers: [RegistroGastosController, CategoriaController],
     providers: [
         RegistroGastosService,

@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsDateString, IsOptional, Min, IsUUID, IsNotEmpty, IsUrl, IsEnum, ValidateNested, IsArray } from 'class-validator';
+import { IsString, IsNumber, IsDateString, IsOptional, Min, IsUUID, IsNotEmpty, IsUrl, IsEnum, ValidateNested, IsArray, IsObject } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { EstadoFactura } from "../../../../generated/prisma/enums";
 import { Type } from 'class-transformer';
@@ -68,6 +68,16 @@ export class CreateFacturaDto {
     @IsOptional()
     @IsString({ each: true })
     facturaTags?: string [];
+
+    // Round-trip del resultado de /procesar-factura: el frontend recibe estos
+    // valores en el form de revisión y los reenvía tal cual al crear la factura.
+    @IsOptional()
+    @IsString()
+    origenExtraccion?: string;
+
+    @IsOptional()
+    @IsObject()
+    confianzaExtraccion?: Record<string, string>;
 
 }
 

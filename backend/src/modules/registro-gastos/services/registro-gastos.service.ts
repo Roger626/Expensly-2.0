@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { CreateFacturaDto, UpdateFacturaDto } from '../dto/factura.dto';
 import { FacturaEntity } from '../entities/factura.entity';
 import { IProcesarFacturaStrategy, FacturaProcesamientoResult, FacturaProcesamientoInput } from '../strategies/factura-procesar.strategy.interface';
@@ -12,6 +12,7 @@ import { ProcesarFacturaQRStrategy } from '../strategies/factura-procesar-qr-str
 
 @Injectable()
 export class RegistroGastosService {
+    private readonly logger = new Logger(RegistroGastosService.name);
 
     constructor(
         @Inject('FACTURA_STRATEGIES')
@@ -33,23 +34,22 @@ export class RegistroGastosService {
     async processInvoice(fileBuffers: Buffer[], clientQrData?: string): Promise<FacturaProcesamientoResult> {
         const originalBuffers = fileBuffers;
 
-        // Downscale solo cuando NO hay un QR del cliente: si hay clientQrData la
-        // estrategia QR usa el fast-path (no escanea imágenes) y si llega a OCR
-        // igualmente necesitará los buffers escalados. Hacer Jimp.read() en 3
-        // imágenes de alta resolución añade ~3-5s innecesarios cuando hay QR.
-        const scaledBuffers = clientQrData
-            ? originalBuffers
-            : await this.downscaleBuffers(fileBuffers, 2400, 1000);
+        // Siempre se downscalea antes de procesar (QR y OCR usan el mismo
+        // tamaño reducido). Cuando hay clientQrData, la estrategia QR ni
+        // siquiera toca los buffers (fast path, confía en el string
+        // directamente) así que este costo no aplica en ese caso — pero
+        // cuando NO hay clientQrData, el escaneo server-side corre hasta 8
+        // passes de Jimp/ZXing por imagen: hacerlo sobre fotos de 3000-4000px
+        // (resolución de cámara de celular) es la causa principal de que el
+        // escaneo de varias imágenes tarde varios minutos. 2400px es de sobra
+        // para que un QR de factura siga siendo legible.
+        const scaledBuffers = await this.downscaleBuffers(fileBuffers, 2400, 1000);
 
         for (const estrategia of this.strategies) {
-            const buffersForStrategy = estrategia instanceof ProcesarFacturaQRStrategy
-                ? originalBuffers   // QR necesita el máximo detalle disponible
-                : scaledBuffers;    // OCR se beneficia de imágenes más livianas
-
             const input: FacturaProcesamientoInput = {
-                fileBuffers: buffersForStrategy,
-                fileBuffer:  buffersForStrategy[0], // compat con estrategias de una sola imagen
-                clientQrData,                        // undefined si el cliente no mandó QR
+                fileBuffers: scaledBuffers,
+                fileBuffer:  scaledBuffers[0], // compat con estrategias de una sola imagen
+                clientQrData,                   // undefined si el cliente no mandó QR
             };
 
             if (await estrategia.canHandle(input)) {
@@ -67,7 +67,7 @@ export class RegistroGastosService {
                     // Si el QR falla (scraping timeout/DGI down), continuar con la siguiente
                     // estrategia (OCR) en vez de responder 500 para no bloquear al usuario.
                     if (estrategia instanceof ProcesarFacturaQRStrategy) {
-                        console.warn('[RegistroGastosService] QR falló, haciendo fallback a OCR:', err);
+                        this.logger.warn(`QR falló, haciendo fallback a OCR: ${err}`);
                         continue;
                     }
                     throw err;
@@ -75,7 +75,7 @@ export class RegistroGastosService {
             }
         }
 
-        throw new Error("La imagen no pudo ser procesada. Intente con otra imagen o revise el formato del archivo.");
+        throw new BadRequestException("La imagen no pudo ser procesada. Intente con otra imagen o revise el formato del archivo.");
     }
 
     async getAllFacturas(organizacionId: string): Promise<FacturaEntity[]> {
@@ -102,9 +102,9 @@ export class RegistroGastosService {
         let cufe = dto.cufe ? dto.cufe.trim() : "";
         //Verificar si ya existe una factura con el mismo CUFE
         const facturaExistente = await this.registroGastosRepository.invoiceExists(organizacionId, dto.numeroFactura, dto.rucProveedor, cufe);
-        if(facturaExistente) throw new Error("Ya existe una factura registrada con el mismo CUFE.");
+        if(facturaExistente) throw new BadRequestException("Ya existe una factura registrada con el mismo CUFE.");
 
-        if(!dto.categoriaId) throw new Error("Debe proporcionar una categoría para la factura.");
+        if(!dto.categoriaId) throw new BadRequestException("Debe proporcionar una categoría para la factura.");
 
         // Mover las imágenes de temp a permanente (si hay)
         if (dto.imagenesFactura && dto.imagenesFactura.length > 0) {
@@ -122,7 +122,7 @@ export class RegistroGastosService {
 
     async updateFactura(id: string, organizacionId: string, dto: UpdateFacturaDto): Promise<FacturaEntity> {
         if (dto.estado === 'RECHAZADO' && !dto.motivoRechazo) {
-            throw new Error('Debe proporcionar un motivo de rechazo al rechazar una factura.');
+            throw new BadRequestException('Debe proporcionar un motivo de rechazo al rechazar una factura.');
         }
         return await this.registroGastosRepository.updateFactura(id, dto, organizacionId);
     }
@@ -151,8 +151,16 @@ export class RegistroGastosService {
         orgId: string,
         catId?: string,
         empId?: string,
+        start?: string,
+        end?: string,
     ): Promise<any> {
-        return await this.registroGastosRepository.getDashboardTendencia(orgId, catId, empId);
+        return await this.registroGastosRepository.getDashboardTendencia(
+            orgId,
+            catId,
+            empId,
+            start ? new Date(start) : undefined,
+            end ? new Date(end) : undefined,
+        );
     }
 
     async getDashboardCategorias(
@@ -184,7 +192,7 @@ export class RegistroGastosService {
 
                 // No reducir si ya está dentro de tamaño o si el lado corto es pequeño
                 if (longest <= maxPx || shortest <= minShort) {
-                    console.log(`[Downscale] Imagen ${i + 1}: ${image.width}x${image.height} — sin cambios (long=${longest}, short=${shortest}).`);
+                    this.logger.log(`Imagen ${i + 1}: ${image.width}x${image.height} — sin cambios (long=${longest}, short=${shortest}).`);
                     return buf;
                 }
 
@@ -196,10 +204,10 @@ export class RegistroGastosService {
 
                 image.resize({ w: newW, h: newH });
                 const scaled = await image.getBuffer('image/jpeg', { quality: 90 });
-                console.log(`[Downscale] Imagen ${i + 1}: ${origW}x${origH} → ${newW}x${newH} (escala ${(scale * 100).toFixed(0)}%)`);
+                this.logger.log(`Imagen ${i + 1}: ${origW}x${origH} → ${newW}x${newH} (escala ${(scale * 100).toFixed(0)}%)`);
                 return scaled;
             } catch (err) {
-                console.warn(`[Downscale] No se pudo escalar la imagen ${i + 1}:`, err);
+                this.logger.warn(`No se pudo escalar la imagen ${i + 1}: ${err}`);
                 return buf;               // si falla, devolver original sin bloquear
             }
         }));

@@ -78,4 +78,30 @@ export class CloudinaryService implements IStorageService {
   async deleteFile(publicId: string): Promise<void> {
     await cloudinary.uploader.destroy(publicId);
   }
+
+  // 4. Listar recursos huérfanos en temp/ para el Cron Job de limpieza
+  async listTempOlderThan(hours: number): Promise<string[]> {
+    const cutoff = Date.now() - hours * 60 * 60 * 1000;
+    const publicIds: string[] = [];
+    let nextCursor: string | undefined;
+
+    do {
+      const result = await cloudinary.api.resources({
+        type: 'upload',
+        prefix: 'expensly/temp/',
+        max_results: 500,
+        next_cursor: nextCursor,
+      });
+
+      for (const resource of result.resources ?? []) {
+        if (new Date(resource.created_at).getTime() < cutoff) {
+          publicIds.push(resource.public_id);
+        }
+      }
+
+      nextCursor = result.next_cursor;
+    } while (nextCursor);
+
+    return publicIds;
+  }
 }
