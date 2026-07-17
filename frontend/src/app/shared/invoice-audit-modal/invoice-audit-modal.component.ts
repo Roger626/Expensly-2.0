@@ -44,6 +44,8 @@ export class InvoiceAuditModalComponent implements OnChanges {
   showRejectForm  = false;
   motivoRechazo   = '';
   isSaving        = false;
+  cufeCopied      = false;
+  private cufeCopiedTimeout?: ReturnType<typeof setTimeout>;
 
   get invoice(): Factura | null {
     return this.invoices[this.currentIndex] ?? null;
@@ -133,6 +135,30 @@ export class InvoiceAuditModalComponent implements OnChanges {
     this.close.emit();
   }
 
+  /** Copia el CUFE al portapapeles y muestra feedback breve ("Copiado ✓"). */
+  async copyCufe(): Promise<void> {
+    const cufe = this.invoice?.cufe;
+    if (!cufe) return;
+
+    try {
+      await navigator.clipboard.writeText(cufe);
+    } catch {
+      // Fallback para navegadores/contextos sin permiso de Clipboard API.
+      const textarea = document.createElement('textarea');
+      textarea.value = cufe;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+
+    this.cufeCopied = true;
+    clearTimeout(this.cufeCopiedTimeout);
+    this.cufeCopiedTimeout = setTimeout(() => (this.cufeCopied = false), 2000);
+  }
+
   /** Reset saving flag after parent handles action */
   resetSaving(): void {
     this.isSaving = false;
@@ -156,5 +182,7 @@ export class InvoiceAuditModalComponent implements OnChanges {
     this.showRejectForm = false;
     this.motivoRechazo  = '';
     this.isSaving       = false;
+    this.cufeCopied     = false;
+    clearTimeout(this.cufeCopiedTimeout);
   }
 }

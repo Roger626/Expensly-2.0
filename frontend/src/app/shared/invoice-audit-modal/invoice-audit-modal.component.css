@@ -344,6 +344,45 @@
   color: #475569;
 }
 
+/* ── CUFE (valor + botón copiar) ──────────────────────────── */
+.af-value-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.af-value-cufe {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-copy-cufe {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  padding: 0.5rem 0.85rem;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4f46e5;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 38px;
+}
+.btn-copy-cufe:hover { background: #e0e7ff; border-color: #a5b4fc; }
+.btn-copy-cufe.copied {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
 /* Total highlight — indigo igual que factura-form */
 .total-field .af-value.af-total {
   font-size: 1.1rem;

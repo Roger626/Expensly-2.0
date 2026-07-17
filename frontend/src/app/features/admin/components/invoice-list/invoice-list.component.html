@@ -26,10 +26,19 @@
 
     <!-- Body -->
     @for (invoice of invoices; track invoice.facturaId) {
-      <div class="t-row t-body-row" role="row" [class.row-selected]="isSelected(invoice)">
+      <div
+        class="t-row t-body-row"
+        role="row"
+        [class.row-selected]="isSelected(invoice)"
+        tabindex="0"
+        [attr.aria-label]="'Ver detalle de la factura de ' + (invoice.nombreProveedor || 'proveedor')"
+        title="Ver detalle de la factura"
+        (click)="openInvoice.emit(invoice)"
+        (keyup.enter)="openInvoice.emit(invoice)"
+      >
 
         <!-- Checkbox -->
-        <div class="t-cell col-check" role="cell">
+        <div class="t-cell col-check" role="cell" (click)="$event.stopPropagation()">
           <input
             type="checkbox"
             class="cb"
@@ -76,7 +85,7 @@
         </div>
 
         <!-- Actions -->
-        <div class="t-cell col-actions" role="cell">
+        <div class="t-cell col-actions" role="cell" (click)="$event.stopPropagation()">
           <button class="btn-actions" aria-label="Ver detalle" (click)="openInvoice.emit(invoice)" title="Abrir auditoría">⋮</button>
         </div>
 
