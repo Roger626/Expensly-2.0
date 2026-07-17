@@ -2,10 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminDashboardPageComponent } from './dashboard.component';
 import { AdminFacadeService } from '../../services/admin.facade.service';
 import { AuthService } from '../../../auth/services/auth.service';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { signal } from '@angular/core';
 
-import { LucideAngularModule, CreditCard, Receipt, Clock, AlertTriangle, Inbox } from 'lucide-angular';
+import { LucideAngularModule, CreditCard, Receipt, Clock, AlertTriangle, Inbox, RefreshCw, TrendingUp, TrendingDown } from 'lucide-angular';
 
 describe('AdminDashboardPageComponent', () => {
   let component: AdminDashboardPageComponent;
@@ -59,7 +59,7 @@ describe('AdminDashboardPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         AdminDashboardPageComponent,
-        LucideAngularModule.pick({ CreditCard, Receipt, Clock, AlertTriangle, Inbox })
+        LucideAngularModule.pick({ CreditCard, Receipt, Clock, AlertTriangle, Inbox, RefreshCw, TrendingUp, TrendingDown })
       ],
       providers: [
         { provide: AdminFacadeService, useValue: facadeMock },
@@ -91,5 +91,26 @@ describe('AdminDashboardPageComponent', () => {
     expect(component.getStatusClass('APROBADO')).toBe('badge-status-approved');
     expect(component.getStatusClass('RECHAZADO')).toBe('badge-status-rejected');
     expect(component.getStatusClass('PENDIENTE')).toBe('badge-status-pending');
+  });
+
+  it('passes the selected date range to getDashboardTendencia (regression: filter used to be ignored)', () => {
+    expect(facadeMock.dashboard.getDashboardTendencia).toHaveBeenCalledWith(
+      undefined, undefined, component.startDate, component.endDate,
+    );
+  });
+
+  it('clears loading and sets isLoading/lastUpdated after a successful load', () => {
+    expect(component.isLoading()).toBeFalse();
+    expect(component.lastUpdated()).not.toBeNull();
+    expect(component.loadError()).toBeNull();
+  });
+
+  it('surfaces a friendly error message and stops loading when a request fails', () => {
+    facadeMock.dashboard.getDashboardResumen.and.returnValue(throwError(() => new Error('network down')));
+
+    component.loadAllDashboardData();
+
+    expect(component.isLoading()).toBeFalse();
+    expect(component.loadError()).toContain('No se pudieron cargar');
   });
 });

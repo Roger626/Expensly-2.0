@@ -31,7 +31,9 @@ export class AdminDashboardService {
 
   getDashboardTendencia(
     categoriaId?: string,
-    usuarioId?: string
+    usuarioId?: string,
+    startDate?: string,
+    endDate?: string
   ): Observable<any> {
     let params = new HttpParams();
 
@@ -40,6 +42,12 @@ export class AdminDashboardService {
     }
     if (usuarioId) {
       params = params.set('usuarioId', usuarioId);
+    }
+    if (startDate) {
+      params = params.set('startDate', startDate);
+    }
+    if (endDate) {
+      params = params.set('endDate', endDate);
     }
 
     return this.http.get<any>(`${this.API}/tendencia-mensual`, { params });

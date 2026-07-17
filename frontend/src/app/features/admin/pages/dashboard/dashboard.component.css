@@ -74,6 +74,101 @@ td {
   font-weight: 400;
 }
 
+/* ─── Refresh block ──────────────────────────────────────────────── */
+.header-refresh-block {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.last-updated-text {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4f46e5;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-refresh lucide-icon {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+}
+
+.btn-refresh lucide-icon.spinning {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Error banner ───────────────────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.1rem;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  color: #9f1239;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.error-banner lucide-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.error-banner span {
+  flex: 1;
+}
+
+.btn-retry {
+  padding: 0.4rem 0.85rem;
+  background: #dc2626;
+  border: none;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-retry:hover {
+  background: #b91c1c;
+}
+
 /* ─── Cards & Glassmorphism ──────────────────────────────────────── */
 .card-glass {
   background: #ffffff;
@@ -191,10 +286,43 @@ td {
   flex-direction: column;
 }
 
+.kpi-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .kpi-label {
   font-size: 0.8rem;
   font-weight: 600;
   color: #64748b;
+}
+
+.kpi-variation {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.kpi-variation lucide-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.kpi-variation.up {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.kpi-variation.down {
+  background: #fff1f2;
+  color: #9f1239;
 }
 
 .kpi-value {
@@ -250,7 +378,8 @@ td {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 220px;
+  position: relative;
+  height: 240px;
   width: 100%;
 }
 
@@ -312,6 +441,39 @@ td {
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+/* ─── Loading skeletons ──────────────────────────────────────────── */
+.chart-skeleton {
+  width: 100%;
+  height: 220px;
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+
+.chart-skeleton.donut-skeleton {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
 }
 
 /* ─── Donut Chart Specifics ──────────────────────────────────────── */

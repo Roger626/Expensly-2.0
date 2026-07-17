@@ -12,7 +12,25 @@
       <h1 class="page-title">Dashboard Administrativo</h1>
       <p class="page-subtitle">Resumen ejecutivo y tendencias financieras de la organización</p>
     </div>
+    <div class="header-refresh-block">
+      @if (lastUpdated()) {
+        <span class="last-updated-text">{{ lastUpdatedLabel() }}</span>
+      }
+      <button class="btn-refresh" (click)="onRefreshClick()" [disabled]="isLoading()" title="Actualizar ahora">
+        <lucide-icon name="refresh-cw" [class.spinning]="isLoading()"></lucide-icon>
+        Actualizar
+      </button>
+    </div>
   </div>
+
+  <!-- Error banner -->
+  @if (loadError()) {
+    <div class="error-banner">
+      <lucide-icon name="alert-triangle"></lucide-icon>
+      <span>{{ loadError() }}</span>
+      <button class="btn-retry" (click)="onRefreshClick()">Reintentar</button>
+    </div>
+  }
 
   <!-- Filter Panel -->
   <div class="filter-panel card-glass">
@@ -72,9 +90,17 @@
         <lucide-icon name="credit-card"></lucide-icon>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Gasto Total</div>
+        <div class="kpi-label-row">
+          <div class="kpi-label">Gasto Total</div>
+          @if (summary.variacionGastoTotal !== null && summary.variacionGastoTotal !== undefined) {
+            <span class="kpi-variation" [class.up]="summary.variacionGastoTotal >= 0" [class.down]="summary.variacionGastoTotal < 0">
+              <lucide-icon [name]="summary.variacionGastoTotal >= 0 ? 'trending-up' : 'trending-down'"></lucide-icon>
+              {{ summary.variacionGastoTotal >= 0 ? '+' : '' }}{{ summary.variacionGastoTotal | number:'1.0-1' }}%
+            </span>
+          }
+        </div>
         <div class="kpi-value">${{ summary.gastoTotal | number:'1.2-2' }}</div>
-        <div class="kpi-subtext">Monto aprobado y pendiente</div>
+        <div class="kpi-subtext">vs. periodo anterior</div>
       </div>
     </div>
 
@@ -84,7 +110,15 @@
         <lucide-icon name="receipt"></lucide-icon>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">ITBMS Recuperable</div>
+        <div class="kpi-label-row">
+          <div class="kpi-label">ITBMS Recuperable</div>
+          @if (summary.variacionItbmsRecuperable !== null && summary.variacionItbmsRecuperable !== undefined) {
+            <span class="kpi-variation" [class.up]="summary.variacionItbmsRecuperable >= 0" [class.down]="summary.variacionItbmsRecuperable < 0">
+              <lucide-icon [name]="summary.variacionItbmsRecuperable >= 0 ? 'trending-up' : 'trending-down'"></lucide-icon>
+              {{ summary.variacionItbmsRecuperable >= 0 ? '+' : '' }}{{ summary.variacionItbmsRecuperable | number:'1.0-1' }}%
+            </span>
+          }
+        </div>
         <div class="kpi-value">${{ summary.itbmsRecuperable | number:'1.2-2' }}</div>
         <div class="kpi-subtext">Tasa de rec.: {{ summary.tasaRecuperacion | number:'1.0-2' }}%</div>
       </div>
@@ -119,82 +153,23 @@
   <div class="charts-grid">
     <!-- Trend Chart -->
     <div class="chart-card card-glass">
-      <h3 class="chart-title">Tendencia Mensual (Últimos 6 meses)</h3>
-      <p class="chart-subtitle">Gasto Total vs ITBMS acumulado</p>
-      
+      <h3 class="chart-title">Tendencia Mensual</h3>
+      <p class="chart-subtitle">Gasto Total vs ITBMS acumulado en el rango seleccionado</p>
+
       <div class="chart-container">
-        @if (trendData.length > 0) {
-          <svg [attr.width]="lineWidth" [attr.height]="lineHeight" class="svg-line-chart">
-            <defs>
-              <linearGradient id="totalGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.25" />
-                <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.0" />
-              </linearGradient>
-              <linearGradient id="itbmsGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#10b981" stop-opacity="0.2" />
-                <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
-              </linearGradient>
-            </defs>
-
-            <!-- Y Axis Grid lines -->
-            @for (tick of yGridTicks; track tick) {
-              <line 
-                [attr.x1]="paddingLeft" 
-                [attr.y1]="paddingTop + (lineHeight - paddingTop - paddingBottom) * (1 - tick / maxTrendVal)" 
-                [attr.x2]="lineWidth - paddingRight" 
-                [attr.y2]="paddingTop + (lineHeight - paddingTop - paddingBottom) * (1 - tick / maxTrendVal)" 
-                stroke="#e2e8f0" 
-                stroke-dasharray="3,3" />
-              <text 
-                [attr.x]="paddingLeft - 8" 
-                [attr.y]="paddingTop + (lineHeight - paddingTop - paddingBottom) * (1 - tick / maxTrendVal) + 4" 
-                class="chart-axis-label align-end">
-                {{ getYLabel(tick) }}
-              </text>
-            }
-
-            <!-- Area fills -->
-            @if (totalAreaPath) {
-              <path [attr.d]="totalAreaPath" fill="url(#totalGrad)" />
-            }
-            @if (itbmsAreaPath) {
-              <path [attr.d]="itbmsAreaPath" fill="url(#itbmsGrad)" />
-            }
-
-            <!-- Trend lines -->
-            @if (totalPath) {
-              <path [attr.d]="totalPath" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" />
-            }
-            @if (itbmsPath) {
-              <path [attr.d]="itbmsPath" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" />
-            }
-
-            <!-- X Axis ticks & labels -->
-            @for (p of trendPointsTotal; track p.label; let idx = $index) {
-              <line 
-                [attr.x1]="p.x" 
-                [attr.y1]="lineHeight - paddingBottom" 
-                [attr.x2]="p.x" 
-                [attr.y2]="lineHeight - paddingBottom + 5" 
-                stroke="#cbd5e1" />
-              <text 
-                [attr.x]="p.x" 
-                [attr.y]="lineHeight - paddingBottom + 20" 
-                class="chart-axis-label align-center">
-                {{ formatMonthLabel(p.label) }}
-              </text>
-
-              <!-- Circle handles on points -->
-              <circle [attr.cx]="p.x" [attr.cy]="p.y" r="5" fill="#4f46e5" stroke="#ffffff" stroke-width="1.5" />
-              <!-- ITBMS handles -->
-              <circle [attr.cx]="trendPointsItbms[idx].x" [attr.cy]="trendPointsItbms[idx].y" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
-            }
-          </svg>
+        @if (isLoading() && trendData.length === 0) {
+          <div class="chart-skeleton shimmer"></div>
+        } @else if (trendData.length > 0) {
+          <canvas baseChart
+            [type]="'line'"
+            [data]="trendChartData"
+            [options]="trendChartOptions">
+          </canvas>
         } @else {
           <div class="empty-chart">No hay suficientes datos históricos</div>
         }
       </div>
-      
+
       <!-- Legend -->
       <div class="chart-legend">
         <div class="legend-item">
@@ -214,26 +189,15 @@
       <p class="chart-subtitle">Gasto acumulado según clasificación</p>
 
       <div class="donut-chart-container">
-        @if (categoriesData.length > 0) {
+        @if (isLoading() && categoriesData.length === 0) {
+          <div class="chart-skeleton shimmer donut-skeleton"></div>
+        } @else if (categoriesData.length > 0) {
           <div class="donut-svg-wrapper">
-            <svg width="180" height="180" viewBox="0 0 40 40" class="donut-svg">
-              <circle class="donut-hole" cx="20" cy="20" r="15.915" fill="#ffffff"></circle>
-              <circle class="donut-ring" cx="20" cy="20" r="15.915" fill="transparent" stroke="#f1f5f9" stroke-width="4"></circle>
-              
-              @for (seg of categorySegments; track seg.name) {
-                <circle 
-                  cx="20" 
-                  cy="20" 
-                  r="15.915" 
-                  fill="transparent" 
-                  [attr.stroke]="seg.color" 
-                  stroke-width="4.5"
-                  [attr.stroke-dasharray]="seg.dashArray" 
-                  [attr.stroke-dashoffset]="seg.dashOffset"
-                  transform="rotate(-90 20 20)">
-                </circle>
-              }
-            </svg>
+            <canvas baseChart
+              [type]="'doughnut'"
+              [data]="categoryChartData"
+              [options]="categoryChartOptions">
+            </canvas>
             <div class="donut-center-label">
               <span class="donut-center-num">{{ summary.gastoTotal | number:'1.0-0' }}</span>
               <span class="donut-center-text">Total USD</span>
