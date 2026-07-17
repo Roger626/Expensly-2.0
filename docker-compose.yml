@@ -45,11 +45,23 @@ services:
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
       AZURE_OCR_ENDPOINT: ${AZURE_OCR_ENDPOINT}
       AZURE_OCR_KEY: ${AZURE_OCR_KEY}
+      # AzureOpenAiService lanza una excepción en su constructor si falta
+      # cualquiera de estas 5 — y se instancia de forma eager al arrancar
+      # Nest. Sin ellas el contenedor entra en crash-loop.
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
+      AZURE_OPENAI_KEY: ${AZURE_OPENAI_KEY}
+      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION}
+      AZURE_OPENAI_DEPLOYMENT_TEXT: ${AZURE_OPENAI_DEPLOYMENT_TEXT}
+      AZURE_OPENAI_DEPLOYMENT_VISION: ${AZURE_OPENAI_DEPLOYMENT_VISION}
       BREVO_USER: ${BREVO_USER}
       BREVO_PASS: ${BREVO_PASS}
       MAIL_FROM: ${MAIL_FROM}
       MAIL_USER: ${MAIL_USER}
       MAIL_PASS: ${MAIL_PASS}
+      PAGUELO_CCLW: ${PAGUELO_CCLW}
+      PAGUELO_ACCESS_TOKEN: ${PAGUELO_ACCESS_TOKEN}
+      PAGUELO_ENV: ${PAGUELO_ENV:-prod}
+      
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,8 +75,14 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    # Igual que postgres/backend: solo accesible desde localhost del VPS.
+    # El único punto de entrada público debe ser el Nginx del host (que ya
+    # tienes configurado detrás de Cloudflare) haciendo proxy_pass a
+    # 127.0.0.1:8080 — nunca expongas este puerto directo a internet, o
+    # cualquiera podría saltarse Cloudflare (WAF, cache, DDoS protection)
+    # pegándole directo a la IP del VPS en este puerto.
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
 
 volumes:
   postgres_data:
