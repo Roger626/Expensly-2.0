@@ -1,40 +1,10 @@
-/* ─── Checkout Callback ──────────────────────────────────────────── */
-
-.checkout-callback-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 60vh;
-  text-align: center;
-  padding: 2rem;
-}
-
-/* ─── States ─────────────────────────────────────────────────────── */
-
-.callback-loading,
-.callback-error,
-.callback-pending,
-.callback-denied {
-  max-width: 400px;
-}
-
-.callback-error {
-  color: var(--exp-red, #dc3545);
-}
-
-.callback-denied {
-  color: var(--exp-red, #dc3545);
-}
-
-.callback-pending {
-  color: var(--exp-yellow, #f59e0b);
-}
-
-/* ─── Buttons ────────────────────────────────────────────────────── */
-
-.callback-btn {
-  margin-top: 1rem;
-  padding: 0.5rem 1.5rem;
-  cursor: pointer;
-  font-family: 'Quicksand', sans-serif;
-}
+.cb { display: grid; place-items: center; min-height: 70vh; padding: 24px; }
+.card { display: grid; justify-items: center; gap: 8px; max-width: 460px; padding: 40px 32px; text-align: center; }
+.card h1 { margin: 8px 0 0; font-size: 21px; font-weight: 800; }
+.card p { margin: 0 0 12px; color: var(--muted); }
+.ico { width: 56px; height: 56px; --ico-tone-o: .25; }
+.ico.danger { color: var(--danger); }
+.ico.warn { color: var(--warn); }
+.spinner { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--brand-soft); border-top-color: var(--brand); animation: spin 800ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }

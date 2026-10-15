@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
@@ -9,7 +10,7 @@ import { Role } from '../../../../core/models/roles.enum';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink, InputComponent, ReactiveFormsModule],
+  imports: [IconComponent, CommonModule, RouterLink, InputComponent, ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })

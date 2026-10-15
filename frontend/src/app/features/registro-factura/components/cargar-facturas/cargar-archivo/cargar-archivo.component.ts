@@ -1,5 +1,5 @@
-﻿import { Component, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+﻿import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { IconComponent } from '../../../../../shared/icon/icon.component';
 
 interface ImagenPreview {
   file: File;
@@ -9,13 +9,17 @@ interface ImagenPreview {
 @Component({
   selector: 'app-cargar-archivo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent],
   templateUrl: './cargar-archivo.component.html',
   styleUrl: './cargar-archivo.component.css'
 })
 export class CargarArchivoComponent {
   @Output() enviarArchivos = new EventEmitter<File[]>();
   @Output() archivosDescartados = new EventEmitter<void>();
+  /** Bloquea cambios mientras se procesa. */
+  @Input() busy = false;
+  /** Avisos de archivos que no se pudieron agregar. */
+  avisos: string[] = [];
 
   imagenes: ImagenPreview[] = [];
   isDragging = false;
@@ -53,16 +57,17 @@ export class CargarArchivoComponent {
   }
 
   private processFiles(files: File[]) {
+    this.avisos = [];
     const disponibles = this.MAX_FILES - this.imagenes.length;
     const aAgregar   = files.slice(0, disponibles);
 
     for (const file of aAgregar) {
       if (!file.type.startsWith('image/')) {
-        alert(`"${file.name}" no es una imagen valida.`);
+        this.avisos.push(`“${file.name}” no es una imagen.`);
         continue;
       }
       if (file.size > this.MAX_SIZE) {
-        alert(`"${file.name}" supera los 5 MB permitidos.`);
+        this.avisos.push(`“${file.name}” pesa más de 5 MB.`);
         continue;
       }
       const reader = new FileReader();
@@ -73,7 +78,7 @@ export class CargarArchivoComponent {
     }
 
     if (files.length > disponibles) {
-      alert(`Solo se pueden subir ${this.MAX_FILES} imagenes por factura. Se ignoraron las extras.`);
+      this.avisos.push(`Se admiten hasta ${this.MAX_FILES} imágenes por factura; las demás no se agregaron.`);
     }
   }
 
@@ -83,12 +88,14 @@ export class CargarArchivoComponent {
 
   onDiscard() {
     this.imagenes = [];
+    this.avisos = [];
     this.archivosDescartados.emit();
   }
 
   /** Limpieza programática desde el padre (post-guardado) */
   reset() {
     this.imagenes = [];
+    this.avisos = [];
     this.isDragging = false;
   }
 

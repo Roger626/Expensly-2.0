@@ -1,46 +1,30 @@
-<nav class="navbar-layout">
-
-  <div class="logo">
-    <a routerLink="/">Expensly</a>
-  </div>
+<nav class="bar" aria-label="Navegación principal">
+  <a routerLink="/" class="brand"><span class="brand-mark">E</span> Expensly</a>
 
   @if (minimal) {
-    <ul class="nav-links">
-      <li>
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-          Inicio
-        </a>
-      </li>
-    </ul>
+    <a routerLink="/" class="ui-btn ui-btn--ghost ui-btn--sm"><app-icon name="home-2-linear" /> Inicio</a>
   } @else {
-    <ul class="nav-links">
+    <ul class="links">
       <li>
-        <a routerLink="/facturas" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-          Ver Facturas
+        <a routerLink="/facturas" routerLinkActive="on" #a1="routerLinkActive" [routerLinkActiveOptions]="{ exact: true }">
+          <app-icon [name]="a1.isActive ? 'bill-list-bold-duotone' : 'bill-list-linear'" /> Mis facturas
         </a>
       </li>
       <li>
-        <a routerLink="/facturas/crear" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-          Registrar Factura
+        <a routerLink="/facturas/crear" routerLinkActive="on" #a2="routerLinkActive">
+          <app-icon [name]="a2.isActive ? 'document-add-bold-duotone' : 'document-add-linear'" /> Subir factura
         </a>
       </li>
     </ul>
 
-    <div class="navbar-user">
+    <div class="user">
       @if (userName) {
+        <span class="ui-avatar">{{ initials }}</span>
         <span class="user-name">{{ userName }}</span>
       }
-      <button class="btn-logout" (click)="onLogout()" title="Cerrar sesión">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2.2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-        <span>Salir</span>
+      <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" (click)="onLogout()" aria-label="Cerrar sesión">
+        <app-icon name="logout-2-linear" /> <span class="out">Salir</span>
       </button>
     </div>
   }
-
 </nav>

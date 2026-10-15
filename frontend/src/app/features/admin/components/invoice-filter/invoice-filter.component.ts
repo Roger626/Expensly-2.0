@@ -8,7 +8,7 @@ import {
   Output,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 import {
@@ -19,7 +19,7 @@ import {
 @Component({
   selector: 'app-invoice-filter',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './invoice-filter.component.html',
   styleUrl: './invoice-filter.component.css',
 })
@@ -63,7 +63,7 @@ export class InvoiceFilterComponent implements OnInit, OnDestroy {
   }
 
   get categoryLabel(): string {
-    if (this.selectedCategories.size === 0) return 'Categorías';
+    if (this.selectedCategories.size === 0) return 'Todas las categorías';
     if (this.selectedCategories.size === 1) return [...this.selectedCategories][0];
     return `${this.selectedCategories.size} categorías`;
   }

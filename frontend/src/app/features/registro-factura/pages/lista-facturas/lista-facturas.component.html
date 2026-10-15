@@ -1,147 +1,81 @@
-@if (vm$ | async; as vm) {
+<header class="ui-page-head">
+  <div>
+    <h1>Mis facturas</h1>
+    <p>{{ nombre() ? nombre() + ', aquí' : 'Aquí' }} ves cada gasto que registraste y en qué va su aprobación.</p>
+  </div>
+  <div class="ui-page-actions">
+    <button type="button" class="ui-btn ui-btn--outline ui-btn--icon" (click)="onRefresh()" [disabled]="isLoading$ | async" aria-label="Actualizar">
+      <app-icon name="refresh-linear" />
+    </button>
+    <a class="ui-btn ui-btn--primary" routerLink="/facturas/crear"><app-icon name="camera-add-linear" /> Subir factura</a>
+  </div>
+</header>
 
-<div class="page-mis-facturas">
-
-  <!-- ═══════════════════ HEADER ═══════════════════ -->
-  <div class="page-header">
-    <div class="header-title-block">
-      <div class="header-eyebrow">
-        <span class="header-dot"></span>
-        Mis Facturas
-      </div>
-      <h1 class="page-title">Mis Facturas</h1>
-      <p class="page-subtitle">Todas las facturas que has registrado en el sistema</p>
+<section class="summary ui-panel" aria-label="Resumen">
+  <div class="fig">
+    <app-icon name="wallet-money-bold-duotone" class="fig-ico ok" />
+    <div><span>Aprobado</span><b class="num">{{ money(resumen().montoAprobado) }}</b></div>
+  </div>
+  <div class="fig">
+    <app-icon name="hourglass-line-bold-duotone" class="fig-ico warn" />
+    <div><span>En revisión</span><b class="num">{{ money(resumen().montoPendiente) }}</b></div>
+  </div>
+  <div class="fig">
+    <app-icon name="close-circle-bold-duotone" class="fig-ico danger" />
+    <div><span>Rechazadas</span><b class="num">{{ resumen().RECHAZADO }}</b>
+      @if (resumen().RECHAZADO) { <button type="button" class="link" (click)="onTab('RECHAZADO')">Ver motivos</button> }
     </div>
+  </div>
+</section>
 
-    <div class="header-actions">
-      <button class="btn-refresh" (click)="onRefresh()" [disabled]="vm.isLoading" title="Actualizar">
-        <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-          <path d="M4 10a6 6 0 0 1 10.47-3.97L16 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M16 4v4h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M16 10a6 6 0 0 1-10.47 3.97L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M4 16v-4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+<section class="ui-panel">
+  <div class="ui-tabs" role="tablist" aria-label="Estado">
+    @for (t of tabs; track t.key) {
+      <button type="button" role="tab" class="ui-tab" [attr.data-tone]="t.key" [attr.aria-selected]="activeTab() === t.key" (click)="onTab(t.key)">
+        {{ t.label }} <span class="ui-tab__count">{{ resumen()[t.key] }}</span>
       </button>
-      <a class="btn-new" routerLink="/facturas/crear">
-        <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-        Nueva Factura
-      </a>
-    </div>
+    }
   </div>
 
-  <!-- ═══════════════════ STATS ═══════════════════ -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <span class="stat-icon stat-icon--blue">&#128196;</span>
-      <div class="stat-info">
-        <span class="stat-value">{{ vm.stats.total }}</span>
-        <span class="stat-label">Total facturas</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-icon stat-icon--green">&#10003;</span>
-      <div class="stat-info">
-        <span class="stat-value">{{ vm.stats.aprobadas }}</span>
-        <span class="stat-label">Aprobadas</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-icon stat-icon--amber">&#9201;</span>
-      <div class="stat-info">
-        <span class="stat-value">{{ vm.stats.pendientes }}</span>
-        <span class="stat-label">Pendientes</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-icon stat-icon--indigo">&#128197;</span>
-      <div class="stat-info">
-        <span class="stat-value">{{ vm.stats.esteMes }}</span>
-        <span class="stat-label">Este mes</span>
-      </div>
-    </div>
-    <div class="stat-card stat-card--wide">
-      <span class="stat-icon stat-icon--green">$</span>
-      <div class="stat-info">
-        <span class="stat-value">{{ vm.stats.totalGastado | currency:'USD':'symbol':'1.2-2' }}</span>
-        <span class="stat-label">Total aprobado</span>
-      </div>
-    </div>
+  <div class="filters">
+    <app-invoice-filter [categories]="(categories$ | async) ?? []" (filterChange)="onFilterChange($event)" />
+    @if (hasFilters()) {
+      <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" (click)="onClearFilters()"><app-icon name="close-circle-linear" /> Quitar filtros</button>
+    }
   </div>
 
-  <!-- ═══════════════════ FILTERS ═══════════════════ -->
-  <div class="filter-wrap">
-    <!-- Reutilizamos el componente admin de filtros (buscar, fechas, categorías) -->
-    <app-invoice-filter
-      [categories]="vm.categories"
-      (filterChange)="onFilterChange($event)"
-    />
-
-    <!-- Filtro rápido por estado -->
-    <div class="status-pills">
-      @for (st of statuses; track st) {
-        <button
-          class="status-pill"
-          [class.active-pending]="vm.filter.selectedStatuses.includes(st) && st === 'PENDIENTE'"
-          [class.active-approved]="vm.filter.selectedStatuses.includes(st) && st === 'APROBADO'"
-          [class.active-rejected]="vm.filter.selectedStatuses.includes(st) && st === 'RECHAZADO'"
-          [class.pill-inactive]="!vm.filter.selectedStatuses.includes(st)"
-          (click)="onStatusToggle(st, vm.filter)"
-        >
-          @if (st === 'PENDIENTE')  { <span class="pill-dot dot-amber"></span>  Pendiente  }
-          @if (st === 'APROBADO')   { <span class="pill-dot dot-green"></span>   Aprobada   }
-          @if (st === 'RECHAZADO')  { <span class="pill-dot dot-red"></span>    Rechazada  }
-        </button>
-      }
-
-      @if (vm.filter.selectedStatuses.length > 0 || vm.filter.searchTerm || vm.filter.dateFrom || vm.filter.dateTo || vm.filter.selectedCategories.length > 0) {
-        <button class="btn-clear-filters" (click)="onClearFilters()" title="Limpiar todos los filtros">
-          ✕ Limpiar filtros
-        </button>
-      }
+  @if (error$ | async; as err) {
+    <div class="ui-alert state" role="alert"><app-icon name="danger-triangle-linear" /> {{ err }}
+      <button type="button" class="ui-btn ui-btn--sm ui-btn--outline" (click)="onRefresh()">Reintentar</button>
     </div>
-  </div>
-
-  <!-- ═══════════════════ LOADING ═══════════════════ -->
-  @if (vm.isLoading) {
-    <div class="loading-row">
-      <span class="spinner"></span>
-      <span>Cargando facturas…</span>
-    </div>
-  }
-
-  <!-- ═══════════════════ ERROR ═══════════════════ -->
-  @if (vm.error) {
-    <div class="error-banner">
-      <span>&#9888; {{ vm.error }}</span>
-      <button class="btn-retry" (click)="onRefresh()">Reintentar</button>
-    </div>
-  }
-
-  <!-- ═══════════════════ TABLE ═══════════════════ -->
-  @if (!vm.isLoading && !vm.error) {
-    <app-factura-card-table
-      [facturas]="vm.facturas"
-      [totalItems]="vm.totalItems"
-      [currentPage]="vm.currentPage"
-      [itemsPerPage]="vm.itemsPerPage"
+  } @else if ((isLoading$ | async) && !resumen().TODAS) {
+    <div class="loading">@for (i of [1, 2, 3, 4, 5]; track i) { <div class="ui-skeleton row-skel"></div> }</div>
+  } @else {
+    <app-invoice-list
+      [invoices]="(paged$ | async) ?? []"
+      [totalItems]="(totalItems$ | async) ?? 0"
+      [currentPage]="(currentPage$ | async) ?? 1"
+      [itemsPerPage]="(itemsPerPage$ | async) ?? 10"
+      [sort]="sort$ | async"
+      [selectable]="false"
+      [showEmployee]="false"
+      [hasFilters]="hasFilters()"
+      emptyTitle="Aún no registras facturas"
+      emptyText="Toma una foto de tu factura y nosotros leemos los datos por ti."
+      (sortChange)="onSort($event)"
       (pageChange)="onPageChange($event)"
-      (openFactura)="onOpenFactura($event)"
-    />
+      (clearFilters)="onClearFilters()"
+      (openInvoice)="onOpenFactura($event)">
+      <a empty-action class="ui-btn ui-btn--primary" routerLink="/facturas/crear"><app-icon name="camera-add-linear" /> Subir mi primera factura</a>
+    </app-invoice-list>
   }
+</section>
 
-</div>
-
-<!-- ═══════════════════ MODAL ═══════════════════ -->
 <app-factura-empleado-modal
   [invoices]="modalInvoices"
   [currentIndex]="modalIndex"
   [isOpen]="modalOpen"
-  [categorias]="(vm$ | async)?.categorias ?? []"
+  [categorias]="categorias()"
   (close)="onModalClose()"
   (updated)="onRefresh()"
-  (deleted)="onModalClose()"
-/>
-
-}
+  (deleted)="onModalClose()" />

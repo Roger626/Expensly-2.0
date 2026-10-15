@@ -1,175 +1,88 @@
-<div class="tabla-card">
-  <table class="tabla-usuarios">
+<div class="ui-table-wrap">
+  <table class="ui-table">
     <thead>
       <tr>
-        <th>Perfil de usuario</th>
-        <th>Correo electrónico</th>
-        <th>Rol asignado</th>
-        <th>Estado actual</th>
-        <th>Acciones</th>
+        <th scope="col">Persona</th>
+        <th scope="col">Rol</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Alta</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
       </tr>
     </thead>
-
     <tbody>
-      @if (usuarios.length === 0) {
-        <tr>
-          <td colspan="5" class="td-empty">
-            <div class="empty-state">
-              <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-                <circle cx="24" cy="24" r="22" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
-                <circle cx="24" cy="19" r="6" stroke="#94a3b8" stroke-width="1.8"/>
-                <path d="M10 38c0-7.73 6.27-14 14-14s14 6.27 14 14" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>
-              </svg>
-              <p>No se encontraron usuarios</p>
-            </div>
-          </td>
-        </tr>
-      }
-
-      @for (u of usuarios; track u.id; let isLast = $last) {
-        <tr>
-          <!-- Perfil -->
-          <td class="td-perfil">
-            <div class="avatar" [style.background]="u.color + '22'" [style.color]="u.color">
-              {{ u.iniciales }}
-            </div>
-            <div class="perfil-info">
-              <span class="perfil-nombre">{{ u.nombre }}</span>
-              <span class="perfil-fecha">Agregado el {{ u.fechaAgregado }}</span>
-            </div>
-          </td>
-
-          <!-- Email -->
-          <td class="td-email">{{ u.email }}</td>
-
-          <!-- Rol -->
-          <td class="td-rol">
-            <span class="badge-rol" [ngClass]="'rol-' + u.rol.toLowerCase()">{{ u.rol }}</span>
-          </td>
-
-          <!-- Estado -->
-          <td class="td-estado">
-            <span class="badge-estado" [ngClass]="'estado-' + u.estado.toLowerCase()">
-              <span class="estado-dot"></span>
-              {{ u.estado }}
+      @for (u of usuarios; track u.id; let last = $last) {
+        <tr [class.is-off]="u.estado === 'Desactivado'">
+          <td>
+            <span class="ui-person">
+              <span class="ui-avatar">{{ u.iniciales }}</span>
+              <span class="who">
+                <b>{{ u.nombre }} @if (u.id === currentUserId) { <span class="you">Tú</span> }</b>
+                <span class="sub">{{ u.email }}</span>
+              </span>
             </span>
           </td>
-
-          <!-- Acciones -->
-          <td class="td-acciones">
-            <div class="menu-wrapper" [class.drop-up]="isLast">
-              <button
-                class="btn-dots"
-                title="Más opciones"
-                (click)="toggleMenu(u.id, $event)"
-              >
-                <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-                  <circle cx="10" cy="5"  r="1.4"/>
-                  <circle cx="10" cy="10" r="1.4"/>
-                  <circle cx="10" cy="15" r="1.4"/>
-                </svg>
-              </button>
-
-              @if (menuAbiertoId === u.id) {
-                <div class="dropdown-menu">
-
-                  <!-- Activar si está desactivado/pendiente, Desactivar si está activo -->
-                  @if (u.estado !== 'Activo') {
-                    <button class="drop-item drop-success" (click)="dispatchAccion('activar', u, $event)">
-                      <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
-                        <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
-                        <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      Activar usuario
+          <td><span class="role" [attr.data-tone]="rolTone(u.rol)">{{ u.rol }}</span></td>
+          <td>
+            <span class="ui-badge" [class.ui-badge--ok]="u.estado === 'Activo'">{{ u.estado }}</span>
+          </td>
+          <td class="muted tnum">{{ u.fechaAgregado }}</td>
+          <td class="actions">
+            @if (u.id !== currentUserId) {
+              <div class="menu" [class.up]="last && usuarios.length > 2">
+                <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon" (click)="toggleMenu(u.id, $event)"
+                        [attr.aria-expanded]="menuAbiertoId === u.id" aria-haspopup="menu" [attr.aria-label]="'Acciones para ' + u.nombre">
+                  <app-icon name="menu-dots-linear" />
+                </button>
+                @if (menuAbiertoId === u.id) {
+                  <div class="dropdown" role="menu" (click)="$event.stopPropagation()">
+                    <button type="button" role="menuitem" (click)="dispatch('cambiar-rol', u, $event)">
+                      <app-icon name="user-id-linear" /> Cambiar rol
                     </button>
-                  } @else {
-                    <button class="drop-item" (click)="dispatchAccion('desactivar', u, $event)">
-                      <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
-                        <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
-                        <path d="M7 10h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      </svg>
-                      Desactivar
+                    @if (u.estado !== 'Activo') {
+                      <button type="button" role="menuitem" (click)="dispatch('activar', u, $event)">
+                        <app-icon name="user-check-linear" /> Activar
+                      </button>
+                    } @else {
+                      <button type="button" role="menuitem" (click)="dispatch('desactivar', u, $event)">
+                        <app-icon name="user-block-linear" /> Desactivar
+                      </button>
+                    }
+                    <hr>
+                    <button type="button" role="menuitem" class="danger" (click)="dispatch('eliminar', u, $event)">
+                      <app-icon name="trash-bin-minimalistic-linear" /> Eliminar
                     </button>
-                  }
-
-                  <button class="drop-item" (click)="dispatchAccion('cambiar-rol', u, $event)">
-                    <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
-                      <circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/>
-                      <path d="M3 17c0-3.31 3.13-6 7-6s7 2.69 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                      <path d="M15 13l2 2-2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Cambiar rol
-                  </button>
-
-                  <div class="drop-divider"></div>
-
-                  @if (u.rol !== 'Admin') {
-                    <button class="drop-item drop-danger" (click)="dispatchAccion('eliminar', u, $event)">
-                      <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
-                        <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      </svg>
-                      Eliminar usuario
-                    </button>
-                  } @else {
-                    <span class="drop-item drop-disabled" title="Los administradores no pueden eliminarse">
-                      <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
-                        <path d="M12 4a4 4 0 0 1 0 8m-4 4c0-2.21 1.79-4 4-4h1m3.5 3.5L18 18M3 3l14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                      </svg>
-                      Eliminar usuario
-                    </span>
-                  }
-
-                </div>
-              }
-            </div>
+                  </div>
+                }
+              </div>
+            }
           </td>
         </tr>
+      } @empty {
+        <tr><td colspan="5">
+          <div class="ui-empty">
+            <app-icon name="users-group-rounded-bold-duotone" />
+            @if (hasFilter) {
+              <h3>Nadie coincide</h3><p>Prueba con otro nombre o cambia el filtro de rol.</p>
+            } @else {
+              <h3>Solo estás tú</h3><p>Invita a tu equipo para que empiecen a registrar sus gastos.</p>
+              <button type="button" class="ui-btn ui-btn--primary" (click)="invitar.emit()">Invitar usuario</button>
+            }
+          </div>
+        </td></tr>
       }
     </tbody>
   </table>
-
-  <!-- ── Footer: info + paginación ──────────────────────────────── -->
-  <div class="tabla-footer">
-    <span class="tabla-info">
-      @if (totalCount === 0) {
-        Sin resultados
-      } @else {
-        Mostrando {{ primerItem }} – {{ ultimoItem }} de {{ totalCount }} usuarios
-      }
-    </span>
-
-    <div class="paginacion">
-      <button
-        class="pag-btn pag-nav"
-        [disabled]="paginaActual === 1"
-        (click)="irPagina(paginaActual - 1)"
-        title="Página anterior"
-      >
-        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-          <path d="M10 3L6 8l4 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
-      @for (p of paginas; track p) {
-        <button
-          class="pag-btn"
-          [class.activa]="p === paginaActual"
-          (click)="irPagina(p)"
-        >
-          {{ p }}
-        </button>
-      }
-
-      <button
-        class="pag-btn pag-nav"
-        [disabled]="paginaActual === totalPaginas || totalPaginas === 0"
-        (click)="irPagina(paginaActual + 1)"
-        title="Página siguiente"
-      >
-        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-          <path d="M6 3l4 5-4 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
-  </div>
 </div>
+
+@if (totalCount > itemsPorPagina) {
+  <nav class="ui-pager" aria-label="Paginación">
+    <span class="num">{{ primerItem }}–{{ ultimoItem }} de {{ totalCount }}</span>
+    <div class="ui-pager__btns">
+      <button type="button" [disabled]="paginaActual === 1" (click)="irPagina(paginaActual - 1)" aria-label="Página anterior"><app-icon name="alt-arrow-left-linear" /></button>
+      @for (p of paginas; track p) {
+        <button type="button" (click)="irPagina(p)" [attr.aria-current]="p === paginaActual ? 'page' : null">{{ p }}</button>
+      }
+      <button type="button" [disabled]="paginaActual === totalPaginas" (click)="irPagina(paginaActual + 1)" aria-label="Página siguiente"><app-icon name="alt-arrow-right-linear" /></button>
+    </div>
+  </nav>
+}

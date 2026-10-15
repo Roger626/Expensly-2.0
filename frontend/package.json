@@ -3,11 +3,13 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "node scripts/build-icons.mjs --serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "postinstall": "node -e \"const fs=require('fs');const path=require('path');const src=path.join('node_modules','zxing-wasm','dist','reader','zxing_reader.wasm');const dst=path.join('public','assets','zxing_reader.wasm');fs.mkdirSync(path.join('public','assets'),{recursive:true});if(fs.existsSync(src)){fs.copyFileSync(src,dst);console.log('zxing_reader.wasm copied to public/assets/');}else{console.warn('zxing_reader.wasm not found at '+src);}\""
+    "postinstall": "node -e \"const fs=require('fs');const path=require('path');const src=path.join('node_modules','zxing-wasm','dist','reader','zxing_reader.wasm');const dst=path.join('public','assets','zxing_reader.wasm');fs.mkdirSync(path.join('public','assets'),{recursive:true});if(fs.existsSync(src)){fs.copyFileSync(src,dst);console.log('zxing_reader.wasm copied to public/assets/');}else{console.warn('zxing_reader.wasm not found at '+src);}\"",
+    "icons": "node scripts/build-icons.mjs",
+    "prebuild": "npm run icons"
   },
   "private": true,
   "dependencies": {
@@ -20,7 +22,6 @@
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "chart.js": "^4.5.1",
-    "lucide-angular": "^0.574.0",
     "ng2-charts": "^7.0.0",
     "rxjs": "~7.8.0",
     "swiper": "^12.1.2",
@@ -32,6 +33,7 @@
     "@angular-devkit/build-angular": "^19.2.19",
     "@angular/cli": "^19.2.19",
     "@angular/compiler-cli": "^19.2.0",
+    "@iconify-json/solar": "^1.2.13",
     "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.6.0",
     "karma": "~6.4.0",

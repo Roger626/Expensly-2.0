@@ -1,279 +1,118 @@
 @if (isOpen && invoice) {
+  <div class="ui-review__backdrop" (click)="editMode ? null : onClose()"></div>
 
-  <!-- Backdrop -->
-  <div class="modal-backdrop" (click)="editMode ? null : onClose()"></div>
-
-  <!-- Panel -->
-  <div class="modal-panel" role="dialog" aria-modal="true">
-    <div class="modal-stripe" [class.stripe-approved]="invoice.estado === 'APROBADO'" [class.stripe-rejected]="invoice.estado === 'RECHAZADO'"></div>
-
-    <!-- ── TOP BAR ────────────────────────────────────────────── -->
-    <div class="modal-topbar">
-      <div class="topbar-left">
-        <span class="tag-label">MI FACTURA</span>
-        <span class="badge-status" [ngClass]="statusClass">{{ statusLabel }}</span>
-        <span class="invoice-title">Factura #{{ invoice.numeroFactura }}</span>
+  <div class="ui-review" role="dialog" aria-modal="true" aria-labelledby="emp-title">
+    <header class="ui-review__top">
+      <div class="ui-review__title">
+        <span class="ui-badge ui-badge--{{ statusTone }}">{{ statusLabel }}</span>
+        <h2 id="emp-title">{{ invoice.nombreProveedor || 'Proveedor sin nombre' }}</h2>
+        <span class="ui-review__sub num">Factura N.º {{ invoice.numeroFactura }} · {{ longDate(invoice.fechaEmision) }}</span>
       </div>
-      <div class="topbar-right">
-        @if (!editMode) {
-          <div class="nav-arrows">
-            <button class="nav-btn" (click)="prev()" [disabled]="!hasPrev" title="Anterior (←)">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M10 12l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <span class="nav-counter">{{ activeIndex + 1 }} / {{ invoices.length }}</span>
-            <button class="nav-btn" (click)="next()" [disabled]="!hasNext" title="Siguiente (→)">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
+      <div class="ui-review__tools">
+        @if (!editMode && invoices.length > 1) {
+          <div class="ui-review__pager">
+            <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon" (click)="prev()" [disabled]="!hasPrev" aria-label="Anterior (←)"><app-icon name="alt-arrow-left-linear" /></button>
+            <span class="num">{{ activeIndex + 1 }} de {{ invoices.length }}</span>
+            <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon" (click)="next()" [disabled]="!hasNext" aria-label="Siguiente (→)"><app-icon name="alt-arrow-right-linear" /></button>
           </div>
         }
-        <button class="icon-btn" title="Cerrar (Esc)" (click)="onClose()">
-          <svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5l-10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
+        <button type="button" class="ui-btn ui-btn--ghost ui-btn--icon" (click)="onClose()" aria-label="Cerrar (Esc)"><app-icon name="close-linear" /></button>
       </div>
-    </div>
+    </header>
 
-    <!-- ── BODY ────────────────────────────────────────────────── -->
-    <div class="modal-body">
-
-      <!-- Left: image viewer -->
-      <div class="panel-left">
-        <div class="doc-label">
-          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M4 1h6l4 4v10H4V1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 1v4h4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          <span>Documento original</span>
-        </div>
+    <div class="ui-review__body">
+      <div class="ui-review__doc">
         @if (imageUrls.length > 0) {
           <app-factura-view [imageUrls]="imageUrls" />
         } @else {
-          <div class="no-image">
-            <svg viewBox="0 0 48 48" fill="none"><rect x="6" y="8" width="36" height="32" rx="3" stroke="#94a3b8" stroke-width="2"/><path d="M6 16h36" stroke="#94a3b8" stroke-width="2"/><path d="M14 24h8M14 30h20" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/></svg>
-            <p>Sin imagen adjunta</p>
-          </div>
+          <div class="ui-empty"><app-icon name="gallery-remove-bold-duotone" /><h3>Sin imagen</h3><p>Esta factura no tiene foto adjunta.</p></div>
         }
       </div>
 
-      <!-- Right: view OR edit -->
-      <div class="panel-right">
-
-        <!-- ─── APPROVED BANNER ─── -->
+      <div class="ui-review__data">
         @if (invoice.estado === 'APROBADO') {
-          <div class="status-banner banner-approved">
-            <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M6 10l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <div>
-              <strong>Factura Aprobada</strong>
-              <p>Tu factura ha sido revisada y aprobada por el administrador.</p>
-            </div>
-          </div>
+          <div class="ui-alert ok"><app-icon name="check-circle-linear" /><div><b>Aprobada.</b> El contador ya la validó; no se puede editar.</div></div>
         }
-
-        <!-- ─── REJECTED BANNER ─── -->
         @if (invoice.estado === 'RECHAZADO') {
-          <div class="status-banner banner-rejected">
-            <svg viewBox="0 0 20 20" fill="none" width="18" height="18"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M7 7l6 6M13 7l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <div>
-              <strong>Factura Rechazada</strong>
-              @if (invoice.motivoRechazo) {
-                <p>Motivo: {{ invoice.motivoRechazo }}</p>
-              } @else {
-                <p>El administrador rechazó esta factura.</p>
-              }
-            </div>
+          <div class="ui-alert"><app-icon name="close-circle-linear" />
+            <div><b>Rechazada.</b> {{ invoice.motivoRechazo || 'El contador no indicó el motivo.' }}</div>
           </div>
         }
-
-        <!-- ─── ERROR MESSAGE ─── -->
         @if (errorMsg) {
-          <div class="error-msg">⚠ {{ errorMsg }}</div>
+          <div class="ui-alert" role="alert"><app-icon name="danger-triangle-linear" />{{ errorMsg }}</div>
         }
 
-        <!-- ─── VIEW MODE ─── -->
         @if (!editMode) {
-          <div class="detail-sections">
-
-            <section class="ds-section">
-              <h4 class="ds-title">Información del Comercio</h4>
-              <div class="ds-row">
-                <div class="ds-field">
-                  <label>Nombre del Comercio</label>
-                  <div class="ds-value">{{ invoice.nombreProveedor || '—' }}</div>
-                </div>
-              </div>
-              <div class="ds-row two-cols">
-                <div class="ds-field">
-                  <label>RUC</label>
-                  <div class="ds-value mono">{{ invoice.rucProveedor || '—' }}</div>
-                </div>
-                <div class="ds-field">
-                  <label>DV</label>
-                  <div class="ds-value">{{ invoice.dv || '—' }}</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="ds-section">
-              <h4 class="ds-title">Datos de la Factura</h4>
-              <div class="ds-row two-cols">
-                <div class="ds-field">
-                  <label>N° Factura</label>
-                  <div class="ds-value mono">{{ invoice.numeroFactura }}</div>
-                </div>
-                <div class="ds-field">
-                  <label>Fecha de Emisión</label>
-                  <div class="ds-value">{{ invoice.fechaEmision | date:'dd/MM/yyyy' }}</div>
-                </div>
-              </div>
-              <div class="ds-row">
-                <div class="ds-field">
-                  <label>CUFE</label>
-                  <div class="ds-value mono small">{{ invoice.cufe || '—' }}</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="ds-section">
-              <h4 class="ds-title">Categoría &amp; Montos</h4>
-              <div class="ds-row">
-                <div class="ds-field">
-                  <label>Categoría</label>
-                  <div class="ds-value">
-                    @if (invoice.categoria) {
-                      <span class="category-pill">{{ invoice.categoria }}</span>
-                    } @else { — }
-                  </div>
-                </div>
-              </div>
-              <div class="ds-row three-cols">
-                <div class="ds-field">
-                  <label>Subtotal</label>
-                  <div class="ds-value amount">{{ (invoice.subtotal ?? 0) | currency:'USD':'symbol':'1.2-2' }}</div>
-                </div>
-                <div class="ds-field">
-                  <label>ITBMS</label>
-                  <div class="ds-value amount">{{ (invoice.itbms ?? 0) | currency:'USD':'symbol':'1.2-2' }}</div>
-                </div>
-                <div class="ds-field">
-                  <label>Total</label>
-                  <div class="ds-value amount total">{{ invoice.montoTotal | currency:'USD':'symbol':'1.2-2' }}</div>
-                </div>
-              </div>
-            </section>
-
+          <div class="ui-review__amount">
+            <span class="ui-review__lbl">Total</span>
+            <b class="num">{{ money(invoice.montoTotal) }}</b>
+            <dl class="ui-review__breakdown num">
+              <div><dt>Subtotal</dt><dd>{{ money(invoice.subtotal ?? invoice.montoTotal - (invoice.itbms ?? 0)) }}</dd></div>
+              <div><dt>ITBMS</dt><dd>{{ money(invoice.itbms ?? 0) }}</dd></div>
+            </dl>
           </div>
-        }
-
-        <!-- ─── EDIT MODE ─── -->
-        @if (editMode) {
-          <div class="edit-form">
-            <div class="ef-section-title">Editar Factura Pendiente</div>
-
-            <div class="ef-row">
-              <label class="ef-label">Nombre del Comercio</label>
-              <input class="ef-input" type="text" [(ngModel)]="editForm.nombreProveedor" placeholder="Nombre del comercio" />
+          <dl class="ui-review__fields">
+            <div class="ui-review__pair">
+              <div><dt>RUC</dt><dd class="num">{{ invoice.rucProveedor || '—' }}</dd></div>
+              <div><dt>DV</dt><dd class="num">{{ invoice.dv || '—' }}</dd></div>
             </div>
-
-            <div class="ef-row two-cols">
-              <div>
-                <label class="ef-label">RUC</label>
-                <input class="ef-input" type="text" [(ngModel)]="editForm.rucProveedor" placeholder="RUC" />
-              </div>
-              <div>
-                <label class="ef-label">DV</label>
-                <input class="ef-input" type="text" [(ngModel)]="editForm.dvProveedor" placeholder="DV" maxlength="2" />
-              </div>
+            <div class="ui-review__pair">
+              <div><dt>Categoría</dt><dd>{{ invoice.categoria || 'Sin categoría' }}</dd></div>
+              <div><dt>Emisión</dt><dd class="num">{{ longDate(invoice.fechaEmision) }}</dd></div>
             </div>
-
-            <div class="ef-row two-cols">
-              <div>
-                <label class="ef-label">N° Factura</label>
-                <input class="ef-input" type="text" [(ngModel)]="editForm.numeroFactura" placeholder="Número de factura" />
-              </div>
-              <div>
-                <label class="ef-label">Fecha de Emisión</label>
-                <input class="ef-input" type="date" [(ngModel)]="editForm.fechaEmision" />
-              </div>
+            <div><dt>CUFE</dt><dd class="num cufe-text">{{ invoice.cufe || 'Sin CUFE (leída con IA)' }}</dd></div>
+          </dl>
+        } @else {
+          <form class="edit" id="emp-edit" (ngSubmit)="onSave()">
+            <div class="ui-field"><label class="ui-label" for="e-prov">Proveedor</label>
+              <input id="e-prov" class="ui-input" name="prov" [(ngModel)]="editForm.nombreProveedor" required></div>
+            <div class="row2">
+              <div class="ui-field"><label class="ui-label" for="e-ruc">RUC</label><input id="e-ruc" class="ui-input num" name="ruc" [(ngModel)]="editForm.rucProveedor"></div>
+              <div class="ui-field dv"><label class="ui-label" for="e-dv">DV</label><input id="e-dv" class="ui-input num" name="dv" maxlength="2" [(ngModel)]="editForm.dvProveedor"></div>
             </div>
-
-            <div class="ef-row">
-              <label class="ef-label">CUFE</label>
-              <input class="ef-input" type="text" [(ngModel)]="editForm.cufe" placeholder="Código único de factura electrónica" />
+            <div class="row2">
+              <div class="ui-field"><label class="ui-label" for="e-num">N.º de factura</label><input id="e-num" class="ui-input num" name="num" [(ngModel)]="editForm.numeroFactura"></div>
+              <div class="ui-field"><label class="ui-label" for="e-fecha">Emisión</label><input id="e-fecha" class="ui-input" type="date" name="fecha" [(ngModel)]="editForm.fechaEmision"></div>
             </div>
-
-            <div class="ef-row">
-              <label class="ef-label">Categoría</label>
-              <select class="ef-input" [(ngModel)]="editForm.categoriaId">
-                <option value="">— Sin categoría —</option>
-                @for (cat of categorias; track cat.id) {
-                  <option [value]="cat.id">{{ cat.nombre }}</option>
-                }
+            <div class="ui-field"><label class="ui-label" for="e-cat">Categoría</label>
+              <select id="e-cat" class="ui-select" name="cat" [(ngModel)]="editForm.categoriaId">
+                <option value="">Sin categoría</option>
+                @for (cat of categorias; track cat.id) { <option [value]="cat.id">{{ cat.nombre }}</option> }
               </select>
             </div>
-
-            <div class="ef-row three-cols">
-              <div>
-                <label class="ef-label">Subtotal</label>
-                <input class="ef-input" type="number" [(ngModel)]="editForm.subtotal" placeholder="0.00" min="0" step="0.01" />
-              </div>
-              <div>
-                <label class="ef-label">ITBMS</label>
-                <input class="ef-input" type="number" [(ngModel)]="editForm.itbms" placeholder="0.00" min="0" step="0.01" />
-              </div>
-              <div>
-                <label class="ef-label">Monto Total *</label>
-                <input class="ef-input" type="number" [(ngModel)]="editForm.monto" placeholder="0.00" min="0.01" step="0.01" />
-              </div>
+            <div class="row3">
+              <div class="ui-field"><label class="ui-label" for="e-sub">Subtotal</label><input id="e-sub" class="ui-input num" type="number" name="sub" min="0" step="0.01" [(ngModel)]="editForm.subtotal"></div>
+              <div class="ui-field"><label class="ui-label" for="e-itb">ITBMS</label><input id="e-itb" class="ui-input num" type="number" name="itb" min="0" step="0.01" [(ngModel)]="editForm.itbms"></div>
+              <div class="ui-field"><label class="ui-label" for="e-tot">Total</label><input id="e-tot" class="ui-input num" type="number" name="tot" min="0.01" step="0.01" [(ngModel)]="editForm.monto" required></div>
             </div>
-
-          </div>
+            <div class="ui-field"><label class="ui-label" for="e-cufe">CUFE <span class="opt">opcional</span></label><input id="e-cufe" class="ui-input num" name="cufe" [(ngModel)]="editForm.cufe"></div>
+          </form>
         }
-
-        <!-- ─── ACTION FOOTER ─── -->
-        <div class="modal-footer">
-
-          @if (!editMode && !showDeleteConfirm) {
-            @if (isPending) {
-              <button class="btn-edit" (click)="onEdit()">
-                <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M11 2l3 3-9 9H2v-3l9-9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                Editar
-              </button>
-              <button class="btn-delete" (click)="onDeleteClick()">
-                <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 5h10M6 5V3h4v2M6 8v4M10 8v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Eliminar
-              </button>
-            } @else {
-              <span class="readonly-note">
-                @if (invoice.estado === 'APROBADO') { ✓ Factura aprobada — solo lectura }
-                @if (invoice.estado === 'RECHAZADO') { ✕ Factura rechazada — solo lectura }
-              </span>
-            }
-          }
-
-          @if (!editMode && showDeleteConfirm) {
-            <div class="delete-confirm">
-              <span>¿Seguro que deseas eliminar esta factura? Esta acción no se puede deshacer.</span>
-              <div class="confirm-actions">
-                <button class="btn-cancel" (click)="onDeleteCancel()" [disabled]="isDeleting">Cancelar</button>
-                <button class="btn-confirm-delete" (click)="onDeleteConfirm()" [disabled]="isDeleting">
-                  @if (isDeleting) { Eliminando… } @else { Sí, eliminar }
-                </button>
-              </div>
-            </div>
-          }
-
-          @if (editMode) {
-            <button class="btn-cancel" (click)="onCancelEdit()" [disabled]="isSaving">Cancelar</button>
-            <button class="btn-save" (click)="onSave()" [disabled]="isSaving || !editForm.monto || !editForm.nombreProveedor">
-              @if (isSaving) {
-                <span class="spinner-sm"></span> Guardando…
-              } @else {
-                <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8l4 4 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Guardar cambios
-              }
-            </button>
-          }
-
-        </div>
-
       </div>
     </div>
-  </div>
 
+    <footer class="ui-review__foot">
+      @if (showDeleteConfirm) {
+        <span class="confirm">¿Eliminar esta factura? No se puede deshacer.</span>
+        <div class="ui-review__actions">
+          <button type="button" class="ui-btn ui-btn--ghost" (click)="onDeleteCancel()" [disabled]="isDeleting">Cancelar</button>
+          <button type="button" class="ui-btn ui-btn--danger-solid" (click)="onDeleteConfirm()" [disabled]="isDeleting">{{ isDeleting ? 'Eliminando…' : 'Eliminar factura' }}</button>
+        </div>
+      } @else if (editMode) {
+        <span class="ui-review__keys"><kbd>Esc</kbd> cancelar</span>
+        <div class="ui-review__actions">
+          <button type="button" class="ui-btn ui-btn--ghost" (click)="onCancelEdit()" [disabled]="isSaving">Cancelar</button>
+          <button type="submit" form="emp-edit" class="ui-btn ui-btn--primary" [disabled]="isSaving || !editForm.monto || !editForm.nombreProveedor">{{ isSaving ? 'Guardando…' : 'Guardar cambios' }}</button>
+        </div>
+      } @else {
+        <span class="ui-review__keys"><kbd>←</kbd><kbd>→</kbd> navegar · <kbd>Esc</kbd> cerrar</span>
+        @if (isPending) {
+          <div class="ui-review__actions">
+            <button type="button" class="ui-btn ui-btn--danger" (click)="onDeleteClick()"><app-icon name="trash-bin-minimalistic-linear" /> Eliminar</button>
+            <button type="button" class="ui-btn ui-btn--outline" (click)="onEdit()"><app-icon name="pen-2-linear" /> Corregir datos</button>
+          </div>
+        }
+      }
+    </footer>
+  </div>
 }

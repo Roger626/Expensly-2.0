@@ -6,7 +6,7 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import {
   InvitacionUsuario,
@@ -20,7 +20,7 @@ export type InvitarEvent = { email: string; rol: RolUsuario; nombre?: string; };
 @Component({
   selector: 'app-user-invite-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent],
+  imports: [FormsModule, ModalComponent, IconComponent],
   templateUrl: './user-invite-modal.component.html',
   styleUrl: './user-invite-modal.component.css',
 })
@@ -66,9 +66,19 @@ export class UserInviteModalComponent implements OnChanges {
   }
 
   // ── Validación ────────────────────────────────────────────────────────────
-  get formularioValido(): boolean {
-    return this.email.trim() !== '' && this.rol !== '';
+  get emailValido(): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim());
   }
+
+  get formularioValido(): boolean {
+    return this.emailValido && this.rol !== '';
+  }
+
+  readonly descripcionRol: Record<RolUsuario, string> = {
+    Admin: 'Gestiona usuarios, plan y facturación, además de revisar facturas.',
+    Contador: 'Revisa y aprueba facturas, exporta a Excel y administra categorías.',
+    Empleado: 'Sube sus facturas y sigue su estado. Solo ve las suyas.',
+  };
 
   // ── Acciones ──────────────────────────────────────────────────────────────
   onCerrar(): void {

@@ -1,191 +1,87 @@
-<div class="page-facturas">
+<app-suscripcion-banner />
 
-  <!-- Suscripción banner -->
-  <app-suscripcion-banner></app-suscripcion-banner>
+<header class="ui-page-head">
+  <div>
+    <h1>Facturas</h1>
+    <p>Revisa, aprueba y exporta los gastos que registró tu equipo.</p>
+  </div>
+  <div class="ui-page-actions">
+    <button type="button" class="ui-btn ui-btn--outline ui-btn--icon" (click)="onRefresh()" [disabled]="isLoading$ | async" aria-label="Actualizar lista">
+      <app-icon name="refresh-linear" />
+    </button>
+    <button type="button" class="ui-btn ui-btn--outline" (click)="onExportExcel()" [disabled]="isExporting">
+      <app-icon name="file-download-linear" />
+      {{ isExporting ? 'Generando…' : selected().size ? 'Exportar selección' : 'Exportar a Excel' }}
+    </button>
+    <a routerLink="/admin/facturas/crear" class="ui-btn ui-btn--primary"><app-icon name="document-add-linear" /> Subir factura</a>
+  </div>
+</header>
 
-  <!-- Header -->
-  <div class="page-header">
-
-    <!-- Left: title block -->
-    <div class="header-title-block">
-      <div class="header-eyebrow">
-        <span class="header-dot"></span>
-        Panel de Administración
-      </div>
-      <h1 class="page-title">Facturas</h1>
-      <p class="page-subtitle">Gestiona y revisa todas las facturas de tu organización</p>
-    </div>
-
-    <!-- Right: action buttons -->
-    <div class="header-actions">
-
-      <!-- Export Excel -->
-      <button class="btn-excel" (click)="onExportExcel()" [disabled]="isExporting" title="Descargar Excel">
-        @if (isExporting) {
-          <span class="spinner-sm"></span>
-        } @else {
-          <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-            <rect x="2" y="2" width="16" height="16" rx="3" fill="#16a34a" opacity="0.15"/>
-            <path d="M6 7l2.5 3L6 13M10 7h4M10 10h3M10 13h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        }
-        {{ isExporting ? 'Exportando…' : 'Descargar Excel' }}
+<section class="ui-panel">
+  <div class="ui-tabs" role="tablist" aria-label="Estado">
+    @for (t of tabs; track t.key) {
+      <button type="button" role="tab" class="ui-tab" [attr.data-tone]="t.key" [attr.aria-selected]="activeTab() === t.key" (click)="onTab(t.key)">
+        {{ t.label }} <span class="ui-tab__count">{{ counts()[t.key] }}</span>
       </button>
-
-      <!-- Approve Selected -->
-      <button
-        class="btn-approve-bulk"
-        (click)="onApproveSelected()"
-        [disabled]="selectedIds.length === 0 || isApprovingBulk"
-        [title]="selectedIds.length === 0 ? 'Selecciona al menos una factura' : 'Aprobar ' + selectedIds.length + ' factura(s)'">
-        <span *ngIf="isApprovingBulk" class="spinner-sm"></span>
-        <svg *ngIf="!isApprovingBulk" viewBox="0 0 20 20" fill="none" width="16" height="16">
-          <polyline points="4 10 8 14 16 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Aprobar seleccionados
-        @if (selectedIds.length > 0) {
-          <span class="selection-badge">{{ selectedIds.length }}</span>
-        }
-      </button>
-
-      <!-- Refresh (icon only) -->
-      <button class="btn-refresh" (click)="onRefresh()" [disabled]="isLoading$ | async" title="Actualizar">
-        <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-          <path d="M4 10a6 6 0 0 1 10.47-3.97L16 8"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M16 4v4h-4"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M16 10a6 6 0 0 1-10.47 3.97L4 12"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M4 16v-4h4"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-
-    </div>
+    }
+    <span class="ui-tabs__aside">
+      {{ filtered().length }} {{ filtered().length === 1 ? 'factura' : 'facturas' }} · <b class="num">{{ money(filteredTotal()) }}</b>
+    </span>
   </div>
 
-  <!-- Stats row -->
-  @if (stats$ | async; as stats) {
-    <div class="stats-row">
-      <div class="stat-card">
-        <span class="stat-icon stat-icon--blue">&#128196;</span>
-        <div class="stat-info">
-          <span class="stat-value">{{ stats.total }}</span>
-          <span class="stat-label">Total facturas</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon stat-icon--green">&#10003;</span>
-        <div class="stat-info">
-          <span class="stat-value">{{ stats.aprobadas }}</span>
-          <span class="stat-label">Aprobadas</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon stat-icon--amber">&#9201;</span>
-        <div class="stat-info">
-          <span class="stat-value">{{ stats.pendientes }}</span>
-          <span class="stat-label">Pendientes</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon stat-icon--red">&#10007;</span>
-        <div class="stat-info">
-          <span class="stat-value">{{ stats.rechazadas }}</span>
-          <span class="stat-label">Rechazadas</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon stat-icon--indigo">&#128197;</span>
-        <div class="stat-info">
-          <span class="stat-value">{{ stats.esteMes }}</span>
-          <span class="stat-label">Este mes</span>
-        </div>
-      </div>
-      <div class="stat-card stat-card--wide">
-        <span class="stat-icon stat-icon--green">$</span>
-        <div class="stat-info">
-          <span class="stat-value">{{ stats.totalAprobado | currency:'USD':'symbol':'1.2-2' }}</span>
-          <span class="stat-label">Total aprobado</span>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Filters (always visible, never inside a conditional block so the
-       component is never torn down and service state stays in sync) -->
-  <div class="filter-wrap">
-    <app-invoice-filter
-      #invoiceFilter
-      [categories]="(categories$ | async) ?? []"
-      (filterChange)="onFilterChange($event)">
-    </app-invoice-filter>
-
-    <!-- Status chips -->
-    @if (filter$ | async; as currentFilter) {
-      <div class="status-pills">
-        @for (st of statuses; track st) {
-          <button
-            class="status-pill"
-            [class.active-pending]="currentFilter.selectedStatuses.includes(st) && st === 'PENDIENTE'"
-            [class.active-approved]="currentFilter.selectedStatuses.includes(st) && st === 'APROBADO'"
-            [class.active-rejected]="currentFilter.selectedStatuses.includes(st) && st === 'RECHAZADO'"
-            [class.pill-inactive]="!currentFilter.selectedStatuses.includes(st)"
-            (click)="onStatusToggle(st, currentFilter)">
-            @if (st === 'PENDIENTE')  { <span class="pill-dot dot-amber"></span> Pendiente  }
-            @if (st === 'APROBADO')   { <span class="pill-dot dot-green"></span> Aprobada   }
-            @if (st === 'RECHAZADO')  { <span class="pill-dot dot-red"></span>   Rechazada  }
-          </button>
-        }
-        @if (currentFilter.selectedStatuses.length > 0 || currentFilter.searchTerm || currentFilter.dateFrom || currentFilter.dateTo || currentFilter.selectedCategories.length > 0) {
-          <button class="btn-clear-filters" (click)="onClearFilters()" title="Limpiar todos los filtros">
-            ✕ Limpiar filtros
-          </button>
-        }
-      </div>
+  <div class="filters">
+    <app-invoice-filter #invoiceFilter [categories]="(categories$ | async) ?? []" (filterChange)="onFilterChange($event)" />
+    @if (hasFilters()) {
+      <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm clear" (click)="onClearFilters()">
+        <app-icon name="close-circle-linear" /> Quitar filtros
+      </button>
     }
   </div>
 
-  <!-- Loading skeleton -->
-  @if (isLoading$ | async) {
-    <div class="state-loading">
-      <span class="spinner"></span>
-      <p>Cargando facturas…</p>
+  @if (error$ | async; as err) {
+    <div class="ui-alert state" role="alert">
+      <app-icon name="danger-triangle-linear" /> {{ err }}
+      <button type="button" class="ui-btn ui-btn--sm ui-btn--outline" (click)="onRefresh()">Reintentar</button>
     </div>
-  }
-
-  <!-- Error -->
-  @else if (error$ | async) {
-    <div class="state-error">
-      <p>{{ error$ | async }}</p>
-      <button class="btn-refresh" (click)="onRefresh()">Reintentar</button>
+  } @else if ((isLoading$ | async) && !filtered().length) {
+    <div class="loading">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) { <div class="ui-skeleton row-skel"></div> }
     </div>
+  } @else {
+    <app-invoice-list
+      [invoices]="(invoices$ | async) ?? []"
+      [totalItems]="(totalItems$ | async) ?? 0"
+      [currentPage]="(currentPage$ | async) ?? 1"
+      [itemsPerPage]="(itemsPerPage$ | async) ?? 10"
+      [selected]="selected()"
+      [sort]="sort$ | async"
+      [hasFilters]="hasFilters()"
+      (pageChange)="onPageChange($event)"
+      (selectionChange)="onSelectionChange($event)"
+      (sortChange)="onSort($event)"
+      (clearFilters)="onClearFilters()"
+      (openInvoice)="onOpenInvoice($event)" />
   }
+</section>
 
-  <!-- Table -->
-  @else {
-    <div class="page-content">
-      <app-invoice-list
-        [invoices]="(invoices$ | async) ?? []"
-        [totalItems]="(totalItems$ | async) ?? 0"
-        [currentPage]="(currentPage$ | async) ?? 1"
-        [itemsPerPage]="(itemsPerPage$ | async) ?? 10"
-        (pageChange)="onPageChange($event)"
-        (selectionChange)="onSelectionChange($event)"
-        (openInvoice)="onOpenInvoice($event)">
-      </app-invoice-list>
-    </div>
-  }
+@if (selected().size) {
+  <div class="bulk" role="region" aria-label="Acciones sobre la selección">
+    <span class="bulk-count"><b class="num">{{ selected().size }}</b> {{ selected().size === 1 ? 'seleccionada' : 'seleccionadas' }}</span>
+    <button type="button" class="ui-btn ui-btn--sm ui-btn--ok" (click)="onApproveSelected()" [disabled]="!selectedPending().length || isApprovingBulk">
+      <app-icon name="check-circle-linear" />
+      {{ isApprovingBulk ? 'Aprobando…' : selectedPending().length ? 'Aprobar ' + selectedPending().length + ' pendientes' : 'Ninguna pendiente' }}
+    </button>
+    <button type="button" class="ui-btn ui-btn--sm bulk-ghost" (click)="onExportExcel()" [disabled]="isExporting">
+      <app-icon name="file-download-linear" /> Exportar
+    </button>
+    <button type="button" class="ui-btn ui-btn--sm bulk-ghost" (click)="clearSelection()">Deseleccionar</button>
+  </div>
+}
 
-</div>
-
-<!-- ── Invoice Audit Modal (portaled outside page flow) ─────────────── -->
 <app-invoice-audit-modal
   [isOpen]="modalOpen"
   [invoices]="modalInvoices"
   [currentIndex]="modalIndex"
   (close)="onModalClose()"
   (approve)="onModalApprove($event)"
-  (reject)="onModalReject($event)">
-</app-invoice-audit-modal>
+  (reject)="onModalReject($event)" />

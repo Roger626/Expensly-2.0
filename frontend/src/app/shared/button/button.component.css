@@ -6,8 +6,8 @@
     border-radius: 6px;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #1a73e8;
-    background: #e8f0fe;
+    color: var(--brand);
+    background: var(--brand-soft);
     border: 1px solid transparent;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s, color 0.2s;

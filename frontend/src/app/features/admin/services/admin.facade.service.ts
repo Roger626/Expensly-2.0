@@ -3,6 +3,7 @@ import { AdminFacturasService } from './admin-facturas.service';
 import { AdminUsuariosService } from './admin-usuarios.service';
 import { AdminSuscripcionService } from './admin-suscripcion.service';
 import { AdminDashboardService } from './admin-dashboard.service';
+import { AdminCategoriasService } from './admin-categorias.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin Facade  (Facade pattern)
@@ -25,5 +26,8 @@ export class AdminFacadeService {
 
     /** Dashboard analysis. */
     readonly dashboard: AdminDashboardService,
+
+    /** Accounting categories (CRUD). */
+    readonly categorias: AdminCategoriasService,
   ) {}
 }

@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -10,7 +11,7 @@ type ViewState = 'form' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, InputComponent],
+  imports: [IconComponent, CommonModule, RouterLink, ReactiveFormsModule, InputComponent],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.css',
 })

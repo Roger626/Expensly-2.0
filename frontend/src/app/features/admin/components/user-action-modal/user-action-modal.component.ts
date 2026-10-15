@@ -1,7 +1,7 @@
 import {
   Component, Input, Output, EventEmitter, OnChanges, SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '../../../../shared/modal/modal.component';
 import { UsuarioTabla, RolUsuario, RolBackend, ROLES_DISPONIBLES, ROL_DISPLAY_TO_BACKEND } from '../../models/usuario.model';
@@ -16,7 +16,7 @@ export interface RolCambiadoEvent {
 @Component({
   selector: 'app-user-action-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent],
+  imports: [FormsModule, ModalComponent, IconComponent],
   templateUrl: './user-action-modal.component.html',
   styleUrl: './user-action-modal.component.css',
 })

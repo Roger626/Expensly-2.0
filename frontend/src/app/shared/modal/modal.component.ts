@@ -2,7 +2,8 @@ import {
   Component, Input, Output, EventEmitter,
   OnChanges, SimpleChanges, HostListener,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
+import { IconName } from '../icon/icons.generated';
 
 export type ModalVariant = 'default' | 'danger' | 'warning' | 'success' | 'info';
 export type ModalSize    = 'sm' | 'md' | 'lg';
@@ -10,7 +11,7 @@ export type ModalSize    = 'sm' | 'md' | 'lg';
 @Component({
   selector: 'app-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent],
   templateUrl: './modal.component.html',
   styleUrl: './modal.component.css',
 })
@@ -35,6 +36,19 @@ export class ModalComponent implements OnChanges {
 
   /** Escala de entrada / salida para la animación. */
   protected animating = false;
+
+  private static seq = 0;
+  protected readonly titleId = `modal-title-${++ModalComponent.seq}`;
+
+  protected get icon(): IconName {
+    switch (this.variant) {
+      case 'success': return 'check-circle-bold-duotone';
+      case 'danger': return 'danger-circle-bold-duotone';
+      case 'warning': return 'danger-triangle-bold-duotone';
+      case 'info': return 'info-circle-bold-duotone';
+      default: return 'user-circle-bold-duotone';
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible']?.currentValue === true) {

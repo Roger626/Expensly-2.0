@@ -6,10 +6,12 @@ import { CommonModule } from '@angular/common';
 import { register } from 'swiper/element/bundle';
 register();
 
+import { IconComponent } from '../icon/icon.component';
+
 @Component({
   selector: 'app-factura-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent, CommonModule],
   templateUrl: './factura-view.component.html',
   styleUrl: './factura-view.component.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

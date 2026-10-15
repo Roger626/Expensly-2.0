@@ -2,22 +2,12 @@
 <div class="cv-wrapper">
 
   <!-- Stripe superior -->
-  <div class="cv-stripe"></div>
-
   <!-- Header -->
   <div class="cv-header">
     <div class="cv-header-left">
-      <div class="cv-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <polyline points="21 15 16 10 5 21"/>
-        </svg>
-      </div>
+      <div class="cv-icon"><app-icon name="gallery-bold-duotone" /></div>
       <div>
-        <p class="cv-label">Imágenes de la factura</p>
+        <p class="cv-label">{{ total === 1 ? 'Imagen de la factura' : 'Imágenes de la factura' }}</p>
       </div>
     </div>
     @if(total > 1){
@@ -38,12 +28,7 @@
           <div class="cv-slide" (click)="openLightbox()">
             <img [src]="img" alt="Imagen de factura" class="cv-img" />
             <div class="cv-slide-hint">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2.5"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
-              </svg>
+              <app-icon name="magnifer-zoom-in-linear" />
               Click para ampliar
             </div>
           </div>
@@ -55,22 +40,12 @@
       <button class="cv-nav cv-nav--prev"
               (click)="prevSlide()"
               [disabled]="currentIndex === 0"
-              title="Anterior">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"/>
-        </svg>
+              title="Anterior"><app-icon name="alt-arrow-left-linear" />
       </button>
       <button class="cv-nav cv-nav--next"
               (click)="nextSlide()"
               [disabled]="currentIndex === total - 1"
-              title="Siguiente">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
+              title="Siguiente"><app-icon name="alt-arrow-right-linear" />
       </button>
     }
   </div>
@@ -82,12 +57,7 @@
 <div class="lb-overlay" (click)="closeLightbox()">
 
   <!-- Cerrar -->
-  <button class="lb-close" (click)="closeLightbox()" title="Cerrar (Esc)">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2.5"
-         stroke-linecap="round" stroke-linejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
+  <button class="lb-close" (click)="closeLightbox()" title="Cerrar (Esc)"><app-icon name="close-linear" />
   </button>
 
   <!-- Contador -->
@@ -117,47 +87,25 @@
     <button class="lb-nav lb-nav--prev"
             (click)="lbPrev(); $event.stopPropagation()"
             [disabled]="currentIndex === 0"
-            title="Anterior (←)">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>
+            title="Anterior (←)"><app-icon name="alt-arrow-left-linear" />
     </button>
     <button class="lb-nav lb-nav--next"
             (click)="lbNext(); $event.stopPropagation()"
             [disabled]="currentIndex === total - 1"
-            title="Siguiente (→)">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
+            title="Siguiente (→)"><app-icon name="alt-arrow-right-linear" />
     </button>
   }
 
   <!-- Controles de zoom -->
   <div class="lb-controls" (click)="$event.stopPropagation()">
-    <button class="lb-ctrl-btn" (click)="lbZoomOut()" [disabled]="lbZoom <= ZOOM_MIN" title="Alejar (−)">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        <line x1="8" y1="11" x2="14" y2="11"/>
-      </svg>
+    <button class="lb-ctrl-btn" (click)="lbZoomOut()" [disabled]="lbZoom <= ZOOM_MIN" title="Alejar (−)"><app-icon name="magnifer-zoom-out-linear" />
     </button>
 
     <button class="lb-ctrl-btn lb-ctrl-reset" (click)="resetZoom()" title="Restablecer (0)">
       {{ lbZoomPct }}
     </button>
 
-    <button class="lb-ctrl-btn" (click)="lbZoomIn()" [disabled]="lbZoom >= ZOOM_MAX" title="Acercar (+)">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
-      </svg>
+    <button class="lb-ctrl-btn" (click)="lbZoomIn()" [disabled]="lbZoom >= ZOOM_MAX" title="Acercar (+)"><app-icon name="magnifer-zoom-in-linear" />
     </button>
   </div>
 

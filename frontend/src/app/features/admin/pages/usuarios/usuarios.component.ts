@@ -1,45 +1,77 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Observable, combineLatest, map, Subscription, filter, delay } from 'rxjs';
+import { Subscription, delay, filter } from 'rxjs';
 
 import { UserTableComponent, MenuAccionEvent } from '../../components/user-table/user-table.component';
 import { UserInviteModalComponent, InvitarEvent } from '../../components/user-invite-modal/user-invite-modal.component';
 import { UserRoleGuideComponent } from '../../components/user-role-guide/user-role-guide.component';
 import { UserActionModalComponent, ActionModalMode, RolCambiadoEvent } from '../../components/user-action-modal/user-action-modal.component';
 import { SuscripcionBannerComponent } from '../../../../shared/suscripcion-banner/suscripcion-banner.component';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { AdminFacadeService } from '../../services/admin.facade.service';
-import { UsuarioTabla, ROL_DISPLAY_TO_BACKEND } from '../../models/usuario.model';
+import { AuthService } from '../../../auth/services/auth.service';
+import { UsuarioTabla, RolUsuario, ROL_DISPLAY_TO_BACKEND } from '../../models/usuario.model';
+
+type RolFiltro = 'Todos' | RolUsuario;
+const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [
-    AsyncPipe,
-    FormsModule,
-    UserTableComponent,
-    UserInviteModalComponent,
-    UserRoleGuideComponent,
-    UserActionModalComponent,
-    SuscripcionBannerComponent,
-  ],
+  imports: [AsyncPipe, FormsModule, UserTableComponent, UserInviteModalComponent, UserRoleGuideComponent,
+    UserActionModalComponent, SuscripcionBannerComponent, IconComponent],
   templateUrl: './usuarios.component.html',
-  styleUrl: './usuarios.component.css'
+  styleUrl: './usuarios.component.css',
 })
 export class UsuariosComponent implements OnInit, OnDestroy {
-
   private readonly facade = inject(AdminFacadeService);
-  private readonly subs   = new Subscription();
+  private readonly auth = inject(AuthService);
+  private readonly subs = new Subscription();
+
+  protected readonly usuarios = toSignal(this.facade.usuarios.usuarios$, { initialValue: [] as UsuarioTabla[] });
+  protected readonly isLoading$ = this.facade.usuarios.isLoading$;
+  protected readonly error$ = this.facade.usuarios.error$;
+  protected readonly isInviting$ = this.facade.usuarios.isInviting$;
+  protected readonly inviteSuccess$ = this.facade.usuarios.inviteSuccess$;
+  protected readonly currentUserId = computed(() => this.auth.currentUser()?.id ?? '');
+
+  // ── Búsqueda, filtro de rol y paginación ─────────────────────
+  protected readonly busqueda = signal('');
+  protected readonly rol = signal<RolFiltro>('Todos');
+  protected readonly pagina = signal(1);
+  protected readonly pageSize = PAGE_SIZE;
+  protected readonly roles: RolFiltro[] = ['Todos', 'Admin', 'Contador', 'Empleado'];
+
+  protected readonly conteo = computed(() => {
+    const c: Record<RolFiltro, number> = { Todos: 0, Admin: 0, Contador: 0, Empleado: 0 };
+    for (const u of this.usuarios()) { c.Todos++; c[u.rol]++; }
+    return c;
+  });
+
+  protected readonly filtrados = computed(() => {
+    const q = this.busqueda().toLowerCase().trim();
+    const rol = this.rol();
+    return this.usuarios().filter((u) =>
+      (rol === 'Todos' || u.rol === rol) &&
+      (!q || u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
+  });
+
+  protected readonly paginados = computed(() =>
+    this.filtrados().slice((this.pagina() - 1) * PAGE_SIZE, this.pagina() * PAGE_SIZE));
+
+  // ── Modales ──────────────────────────────────────────────────
+  protected modalVisible = false;
+  protected actionModalVisible = false;
+  protected actionModalMode: ActionModalMode = 'cambiar-rol';
+  protected actionModalUsuario: UsuarioTabla | null = null;
 
   ngOnInit(): void {
     this.facade.usuarios.loadAll();
-
-    // Cierra el modal automáticamente 1.8 s después de que el backend confirme éxito
+    // Cierra el modal de invitación poco después de confirmar el éxito
     this.subs.add(
-      this.facade.usuarios.inviteSuccess$.pipe(
-        filter(ok => ok),
-        delay(1800),
-      ).subscribe(() => {
+      this.facade.usuarios.inviteSuccess$.pipe(filter(Boolean), delay(1800)).subscribe(() => {
         this.modalVisible = false;
         this.facade.usuarios.resetInviteState();
       }),
@@ -50,72 +82,16 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
-  // ── Streams del facade ────────────────────────────────────────────────────
-  protected readonly isLoading$     = this.facade.usuarios.isLoading$;
-  protected readonly error$         = this.facade.usuarios.error$;
-  protected readonly isInviting$    = this.facade.usuarios.isInviting$;
-  protected readonly inviteSuccess$ = this.facade.usuarios.inviteSuccess$;
-
-  // ── Búsqueda / paginación (estado local) ─────────────────────────────────
-  protected busqueda       = '';
-  protected paginaActual   = 1;
-  protected itemsPorPagina = 10;
-
-  // ── Modal Invitar ──────────────────────────────────────────────────────────────
-  protected modalVisible = false;
-
-  // ── Modal Acción (cambiar rol / eliminar) ──────────────────────────────
-  protected actionModalVisible = false;
-  protected actionModalMode: ActionModalMode = 'cambiar-rol';
-  protected actionModalUsuario: UsuarioTabla | null = null;
-
-  // ── Lista filtrada + paginada ─────────────────────────────────────────────
-  protected readonly usuariosFiltrados$: Observable<UsuarioTabla[]> =
-    this.facade.usuarios.usuarios$.pipe(
-      map(lista => {
-        const q = this.busqueda.toLowerCase().trim();
-        if (!q) return lista;
-        return lista.filter(
-          u =>
-            u.nombre.toLowerCase().includes(q) ||
-            u.email.toLowerCase().includes(q)  ||
-            u.rol.toLowerCase().includes(q),
-        );
-      }),
-    );
-
-  protected readonly vm$ = combineLatest([
-    this.usuariosFiltrados$,
-    this.facade.usuarios.isLoading$,
-    this.facade.usuarios.error$,
-    this.facade.usuarios.isInviting$,
-    this.facade.usuarios.inviteSuccess$,
-  ]).pipe(
-    map(([filtrados, isLoading, error, isInviting, inviteSuccess]) => ({
-      filtrados,
-      isLoading,
-      error,
-      isInviting,
-      inviteSuccess,
-      paginados:   filtrados.slice(
-        (this.paginaActual - 1) * this.itemsPorPagina,
-        this.paginaActual * this.itemsPorPagina,
-      ),
-      total: filtrados.length,
-    })),
-  );
-
-  // ── Handlers de búsqueda / paginación ────────────────────────────────────
   onBuscar(valor: string): void {
-    this.busqueda = valor;
-    this.paginaActual = 1;
+    this.busqueda.set(valor);
+    this.pagina.set(1);
   }
 
-  onPageChange(page: number): void {
-    this.paginaActual = page;
+  onRol(r: RolFiltro): void {
+    this.rol.set(r);
+    this.pagina.set(1);
   }
 
-  // ── Handlers del modal ───────────────────────────────────────────────────
   abrirModal(): void {
     this.modalVisible = true;
   }
@@ -125,27 +101,22 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.facade.usuarios.resetInviteState();
   }
 
-  onInvitar(evento: InvitarEvent): void {
-    const rolBackend = ROL_DISPLAY_TO_BACKEND[evento.rol];
-    this.facade.usuarios.inviteUser(evento.email, rolBackend, evento.nombre);
+  onInvitar(e: InvitarEvent): void {
+    this.facade.usuarios.inviteUser(e.email, ROL_DISPLAY_TO_BACKEND[e.rol], e.nombre);
   }
 
-  // ── Handler de acciones de la tabla ──────────────────────────────────────
-  onMenuAccion(evento: MenuAccionEvent): void {
-    const { accion, usuario } = evento;
-    if (accion === 'activar') {
-      this.facade.usuarios.setUserStatus(usuario.id, true);
-    } else if (accion === 'desactivar') {
-      this.facade.usuarios.setUserStatus(usuario.id, false);
-    } else if (accion === 'cambiar-rol' || accion === 'eliminar') {
-      this.actionModalMode    = accion;
+  onMenuAccion({ accion, usuario }: MenuAccionEvent): void {
+    if (accion === 'activar' || accion === 'desactivar') {
+      this.facade.usuarios.setUserStatus(usuario.id, accion === 'activar');
+    } else {
+      this.actionModalMode = accion;
       this.actionModalUsuario = usuario;
       this.actionModalVisible = true;
     }
   }
 
-  onRolCambiado(evento: RolCambiadoEvent): void {
-    this.facade.usuarios.updateUserRole(evento.userId, evento.rol);
+  onRolCambiado(e: RolCambiadoEvent): void {
+    this.facade.usuarios.updateUserRole(e.userId, e.rol);
   }
 
   onEliminado(userId: string): void {

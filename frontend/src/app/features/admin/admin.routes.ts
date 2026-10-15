@@ -13,5 +13,9 @@ export const adminRoutes: Routes = [
     },
     { path: 'facturas',       component: FacturasComponent },
     { path: 'facturas/crear', component: CargarFacturaComponent },
-    { path: 'usuarios',       component: UsuariosComponent },
+    { path: 'usuarios',       component: UsuariosComponent, canActivate: [roleGuard([Role.SUPERADMIN])] },
+    {
+        path: 'categorias',
+        loadComponent: () => import('./pages/categorias/categorias.component').then(m => m.CategoriasComponent),
+    },
 ];

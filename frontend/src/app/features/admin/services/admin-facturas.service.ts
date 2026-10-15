@@ -6,7 +6,8 @@ import { map, distinctUntilChanged } from 'rxjs/operators';
 import { Factura } from '../../registro-factura/models/factura.model';
 import { FacturaApiResponse, mapFacturaApiToModel } from '../models/admin-factura.model';
 import { IAdminFacturasService } from '../interfaces/iadmin-facturas.service';
-import { DEFAULT_FILTER, InvoiceFilterState } from '../models/invoice-filter-state.model';
+import { applyInvoiceQuery, nextSort } from '../models/invoice-query';
+import { DEFAULT_FILTER, DEFAULT_SORT, InvoiceFilterState, InvoiceSort } from '../models/invoice-filter-state.model';
 import { environment } from '../../../../environments/environment';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ export class AdminFacturasService implements IAdminFacturasService {
   private readonly _currentPage$  = new BehaviorSubject<number>(1);
   private readonly _itemsPerPage$ = new BehaviorSubject<number>(10);
   private readonly _filter$       = new BehaviorSubject<InvoiceFilterState>(DEFAULT_FILTER);
+  private readonly _sort$         = new BehaviorSubject<InvoiceSort>(DEFAULT_SORT);
 
   // ── Public Observable streams ─────────────────────────────────────────────
   readonly facturas$     = this._facturas$.asObservable();
@@ -34,6 +36,7 @@ export class AdminFacturasService implements IAdminFacturasService {
   readonly currentPage$  = this._currentPage$.asObservable();
   readonly itemsPerPage$ = this._itemsPerPage$.asObservable();
   readonly filter$       = this._filter$.asObservable();
+  readonly sort$         = this._sort$.asObservable();
 
   /** Categorías únicas derivadas de la lista completa (sin filtrar). */
   readonly availableCategories$: Observable<string[]> = this._facturas$.pipe(
@@ -45,47 +48,8 @@ export class AdminFacturasService implements IAdminFacturasService {
   );
 
   /** Facturas filtradas según los criterios actuales. */
-  readonly filteredFacturas$ = combineLatest([
-    this._facturas$,
-    this._filter$,
-  ]).pipe(
-    map(([facturas, filter]) => {
-      let result = facturas;
-
-      // ── Text search (CUFE, proveedor, empleado) ──────────────────────────
-      const term = filter.searchTerm.toLowerCase().trim();
-      if (term) {
-        result = result.filter(f =>
-          f.cufe?.toLowerCase().includes(term)           ||
-          f.nombreProveedor?.toLowerCase().includes(term) ||
-          f.rucProveedor?.toLowerCase().includes(term)   ||
-          f.numeroFactura?.toLowerCase().includes(term)  ||
-          (f as any).nombreEmpleado?.toLowerCase().includes(term),
-        );
-      }
-
-      // ── Date range ────────────────────────────────────────────────────────
-      if (filter.dateFrom) {
-        const from = new Date(filter.dateFrom).getTime();
-        result = result.filter(f => new Date(f.fechaEmision).getTime() >= from);
-      }
-      if (filter.dateTo) {
-        const to = new Date(filter.dateTo).getTime() + 86_400_000 - 1; // inclusive day
-        result = result.filter(f => new Date(f.fechaEmision).getTime() <= to);
-      }
-
-      // ── Categories ────────────────────────────────────────────────────────
-      if (filter.selectedCategories.length > 0) {
-        const cats = new Set(filter.selectedCategories);
-        result = result.filter(f => f.categoria && cats.has(f.categoria));
-      }
-      // ── Statuses ──────────────────────────────────────────────────────
-      if (filter.selectedStatuses.length > 0) {
-        const statuses = new Set(filter.selectedStatuses);
-        result = result.filter(f => f.estado && statuses.has(f.estado));
-      }
-      return result;
-    }),
+  readonly filteredFacturas$ = combineLatest([this._facturas$, this._filter$, this._sort$]).pipe(
+    map(([facturas, filter, sort]) => applyInvoiceQuery(facturas, filter, sort)),
   );
 
   /** Total de facturas coincidentes (respeta filtros). */
@@ -161,6 +125,11 @@ export class AdminFacturasService implements IAdminFacturasService {
     this._filter$.next(state);
   }
 
+  /** Cambia el orden; si es la misma columna, invierte la dirección. */
+  toggleSort(key: InvoiceSort['key']): void {
+    this._sort$.next(nextSort(this._sort$.getValue(), key));
+  }
+
   /** Snapshot del filtro actual (sin suscripción). */
   getCurrentFilter(): InvoiceFilterState {
     return this._filter$.getValue();
@@ -207,3 +176,4 @@ export class AdminFacturasService implements IAdminFacturasService {
     return this.http.post(`${this.API}/export`, { ids }, { responseType: 'blob' });
   }
 }
+

@@ -1,129 +1,24 @@
-/* Contenedor principal del input y label */
-.form-control {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem; /* 6px */
-  margin-bottom: 1.25rem; /* Espaciado entre campos */
-  width: 100%;
-  font-family: 'Inter', -apple-system, sans-serif;
-}
-
-.input-shell {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-shell input {
-  width: 100%;
-}
-
-.input-shell--password input {
-  padding-right: 3rem;
-}
-
-/* Estilo de la etiqueta (Label) */
-label {
-  font-size: 0.875rem; /* 14px */
-  font-weight: 600;
-  color: #374151; /* Gris oscuro profesional */
-  text-align: left;
-}
-
-/* Estilo del campo de texto (Input) */
+.form-control { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; width: 100%; font-family: var(--font); }
+label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.input-shell { position: relative; display: flex; align-items: center; }
 input {
-  padding: 0.75rem 1rem; /* 12px 16px */
-  font-size: 0.9375rem; /* 15px */
-  border: 1px solid #d1d5db; /* Borde gris suave */
-  border-radius: 0.5rem; /* 8px */
-  background-color: #ffffff;
-  color: #111827;
-  transition: all 0.2s ease-in-out; /* Suaviza el cambio de color al hacer clic */
-  outline: none; /* Quitamos el borde azul feo por defecto del navegador */
+  width: 100%; height: 42px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  font: 400 14.5px var(--font); color: var(--ink);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
-
-/* Estado cuando el usuario hace clic para escribir (Focus) */
-input:focus {
-  border-color: #2563eb; /* Azul corporativo */
-  box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.1); /* 4px */
-}
-
-/* Estado cuando el input está deshabilitado */
-input:disabled {
-  background-color: #f3f4f6;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* Oculta el ícono nativo de "mostrar contraseña" de Edge/IE, que de otro
-   modo se superpone a nuestro botón .password-toggle */
-input[type='password']::-ms-reveal,
-input[type='password']::-ms-clear {
-  display: none;
-}
-
+input[type="number"] { font-variant-numeric: tabular-nums; }
+input::placeholder { color: var(--faint); }
+input:hover { border-color: #C9D0DA; }
+input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px var(--brand-ring); }
+input:disabled { background: var(--sunken); color: var(--muted); cursor: not-allowed; }
+input.is-invalid { border-color: var(--danger); }
+input.is-invalid:focus { box-shadow: 0 0 0 4px rgba(197, 34, 31, .15); }
+.input-shell--password input { padding-right: 44px; }
 .password-toggle {
-  position: absolute;
-  right: 0.55rem;
-  width: 2.1rem;
-  height: 2.1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: #4f46e5;
-  cursor: pointer;
-  padding: 0;
-  border-radius: 999px;
-  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  position: absolute; right: 6px; display: grid; place-items: center; width: 32px; height: 32px;
+  border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer;
 }
-
-.password-toggle:hover {
-  color: #312e81;
-  background: rgba(79, 70, 229, 0.08);
-  transform: translateY(-1px);
-}
-
-.password-toggle:focus-visible {
-  outline: none;
-  background: rgba(79, 70, 229, 0.12);
-  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.16);
-}
-
-.password-toggle svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* --- ESTADOS DE ERROR --- */
-
-/* Clase que se activa cuando isInvalid es true */
-input.is-invalid {
-  border-color: #ef4444; /* Rojo de error */
-}
-
-/* Brillo rojo cuando el usuario hace focus en un campo con error */
-input.is-invalid:focus {
-  box-shadow: 0 0 0 0.25rem rgba(239, 68, 68, 0.1); /* 4px */
-}
-
-/* Estilo del mensaje de error debajo del input */
-.error-msg {
-  font-size: 0.75rem; /* 12px */
-  color: #ef4444;
-  font-weight: 500;
-  margin-top: 0.125rem; /* 2px */
-  animation: fadeIn 0.3s ease; /* Animación simple para que aparezca suave */
-}
-
-/* Animación de entrada para el error */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-0.3125rem); } /* 5px */
-  to { opacity: 1; transform: translateY(0); }
-}
+.password-toggle:hover { background: var(--line-2); color: var(--ink); }
+.password-toggle app-icon { width: 18px; height: 18px; }
+.error-msg { font-size: 12.5px; color: var(--danger); }

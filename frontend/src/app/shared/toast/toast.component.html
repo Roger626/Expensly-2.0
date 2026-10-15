@@ -1,70 +1,15 @@
-<div class="toast-container" aria-live="polite" aria-atomic="false">
-  @for (toast of toasts$ | async; track trackById($index, toast)) {
-    <div class="toast toast--{{ toast.type }}" role="alert">
-
-      <!-- Icon pill -->
-      <span class="toast-icon" aria-hidden="true">
-        @switch (toast.type) {
-          @case ('success') {
-            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.6"/>
-              <polyline points="6 10 9 13 14 7" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          }
-          @case ('error') {
-            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.6"/>
-              <line x1="7" y1="7" x2="13" y2="13" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round"/>
-              <line x1="13" y1="7" x2="7" y2="13" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round"/>
-            </svg>
-          }
-          @case ('warning') {
-            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-              <path d="M9.13 3.5 2.5 15.5h15L11.87 3.5a1 1 0 0 0-1.74 0Z"
-                    stroke="currentColor" stroke-width="1.6"
-                    stroke-linejoin="round"/>
-              <line x1="10" y1="8.5" x2="10" y2="12" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round"/>
-              <circle cx="10" cy="14.5" r="0.8" fill="currentColor"/>
-            </svg>
-          }
-          @default {
-            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-              <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.6"/>
-              <line x1="10" y1="6.5" x2="10" y2="10.5" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round"/>
-              <circle cx="10" cy="13.5" r="0.8" fill="currentColor"/>
-            </svg>
-          }
-        }
-      </span>
-
-      <!-- Body -->
+<div class="toast-container" aria-live="polite">
+  @for (toast of toasts$ | async; track toast.id) {
+    <div class="toast" [attr.data-type]="toast.type" [attr.role]="toast.type === 'error' ? 'alert' : 'status'">
+      <app-icon [name]="icon[toast.type]" class="toast-icon" />
       <div class="toast-body">
         <span class="toast-title">{{ toast.title }}</span>
-        @if (toast.message) {
-          <span class="toast-message">{{ toast.message }}</span>
-        }
+        @if (toast.message) { <span class="toast-message">{{ toast.message }}</span> }
       </div>
-
-      <!-- Dismiss -->
-      <button class="toast-dismiss" (click)="dismiss(toast.id)" aria-label="Cerrar">
-        <svg viewBox="0 0 16 16" fill="none" width="12" height="12">
-          <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round"/>
-          <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round"/>
-        </svg>
+      <button type="button" class="toast-dismiss" (click)="dismiss(toast.id)" aria-label="Cerrar aviso">
+        <app-icon name="close-linear" />
       </button>
-
-      <!-- Progress bar -->
-      <div class="toast-progress"
-           [style.animation-duration.ms]="toast.durationMs">
-      </div>
-
+      <span class="toast-progress" [style.animation-duration.ms]="toast.durationMs"></span>
     </div>
   }
 </div>

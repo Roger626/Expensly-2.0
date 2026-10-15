@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -13,7 +14,7 @@ import { ToastService } from '../../../../shared/toast/toast.service';
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [RouterModule, CommonModule, ModalComponent],
+  imports: [IconComponent, RouterModule, CommonModule, ModalComponent],
   templateUrl: './onboarding.component.html',
   styleUrls: ['./onboarding.component.css']
 })

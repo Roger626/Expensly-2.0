@@ -80,7 +80,7 @@ function getIniciales(nombre: string): string {
 
 // ── Mapper API → UI ─────────────────────────────────────────────────────────
 export function mapApiUsuarioToTabla(u: UsuarioApiResponse): UsuarioTabla {
-  const estado: EstadoUsuario = u.isActive ? 'Activo' : 'Pendiente';
+  const estado: EstadoUsuario = u.isActive ? 'Activo' : 'Desactivado';
   const nombre = u.name ?? u.email.split('@')[0];
   return {
     id:            u.id,

@@ -1,12 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { IconComponent } from '../icon/icon.component';
+import { initials } from '../format/format';
 import { AuthService } from '../../features/auth/services/auth.service';
 import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, IconComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
@@ -21,6 +23,7 @@ export class NavbarComponent {
 
   /** Nombre del usuario autenticado para mostrarlo en la barra. */
   protected readonly userName = this.authService.currentUser()?.name ?? '';
+  protected readonly initials = initials(this.userName);
 
   onLogout(): void {
     this.logout.emit();

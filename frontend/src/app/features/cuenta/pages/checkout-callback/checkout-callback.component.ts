@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminFacadeService } from '../../../admin/services/admin.facade.service';
 import { ToastService } from '../../../../shared/toast/toast.service';
@@ -12,7 +12,7 @@ import { ToastService } from '../../../../shared/toast/toast.service';
 @Component({
   selector: 'app-checkout-callback',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconComponent],
   templateUrl: './checkout-callback.component.html',
   styleUrl: './checkout-callback.component.css',
 })

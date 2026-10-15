@@ -1,61 +1,33 @@
-<app-modal
-  [visible]="visible && !!usuario"
-  [title]="titulo"
-  [subtitle]="subtitulo"
-  [variant]="modalVariant"
-  size="sm"
-  (closed)="onCerrar()">
+<app-modal [visible]="visible && !!usuario" [title]="titulo" [subtitle]="subtitulo" [variant]="modalVariant" size="sm" (closed)="onCerrar()">
+  <app-icon modal-icon [name]="mode === 'eliminar' ? 'trash-bin-minimalistic-bold-duotone' : 'user-id-bold-duotone'" />
 
-  <!-- Body -->
   <div modal-body>
     @if (mode === 'cambiar-rol') {
-      <div class="form-group">
-        <label class="form-label">Nuevo rol</label>
-        <div class="select-wrapper">
-          <svg class="input-icon" viewBox="0 0 20 20" fill="none" width="14" height="14">
-            <circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M3 17c0-3.31 3.13-6 7-6s7 2.69 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <select class="form-select" [(ngModel)]="rolSeleccionado">
-            @for (r of roles; track r) {
-              <option [value]="r">{{ r }}</option>
-            }
-          </select>
-          <svg class="select-arrow" viewBox="0 0 16 16" fill="none" width="13" height="13">
-            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </div>
+      <fieldset class="roles">
+        <legend class="ui-label">Nuevo rol</legend>
+        @for (r of roles; track r) {
+          <label class="role-opt" [class.is-on]="rolSeleccionado === r">
+            <input type="radio" name="rol" [value]="r" [(ngModel)]="rolSeleccionado">
+            <b>{{ r }}</b>
+            @if (usuario?.rol === r) { <span class="current">actual</span> }
+          </label>
+        }
+      </fieldset>
     }
-
     @if (mode === 'eliminar' && usuario) {
-      <div class="confirm-warn">
-        <svg viewBox="0 0 20 20" fill="none" width="22" height="22" style="flex-shrink:0">
-          <circle cx="10" cy="10" r="8" stroke="#f59e0b" stroke-width="1.5"/>
-          <path d="M10 6v5" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="10" cy="14" r="1" fill="#f59e0b"/>
-        </svg>
-        <p>
-          Estás a punto de <strong>eliminar permanentemente</strong> a
-          <strong>{{ usuario.nombre }}</strong>.<br>
-          Esta acción no se puede deshacer.
-        </p>
-      </div>
+      <p class="warn">
+        <b>{{ usuario.nombre }}</b> perderá el acceso de inmediato. Sus facturas se conservan para auditoría, sin empleado asignado.
+        Esta acción no se puede deshacer; si solo quieres quitarle el acceso, desactívalo.
+      </p>
     }
   </div>
 
-  <!-- Footer -->
   <ng-container modal-footer>
-    <button class="modal-btn modal-btn--ghost" (click)="onCerrar()">Cancelar</button>
-    <button
-      class="modal-btn"
-      [class.modal-btn--primary]="mode === 'cambiar-rol'"
-      [class.modal-btn--danger]="mode === 'eliminar'"
-      [disabled]="mode === 'cambiar-rol' && !rolSeleccionado"
-      (click)="onConfirmar()"
-    >
-      {{ mode === 'eliminar' ? 'Sí, eliminar' : 'Guardar cambio' }}
-    </button>
+    <button type="button" class="ui-btn ui-btn--ghost" (click)="onCerrar()">Cancelar</button>
+    @if (mode === 'eliminar') {
+      <button type="button" class="ui-btn ui-btn--danger-solid" (click)="onConfirmar()">Eliminar usuario</button>
+    } @else {
+      <button type="button" class="ui-btn ui-btn--primary" (click)="onConfirmar()" [disabled]="!rolSeleccionado || rolSeleccionado === usuario?.rol">Guardar rol</button>
+    }
   </ng-container>
-
 </app-modal>

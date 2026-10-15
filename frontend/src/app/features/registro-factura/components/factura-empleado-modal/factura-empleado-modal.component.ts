@@ -7,7 +7,8 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon/icon.component';
+import { longDate, money } from '../../../../shared/format/format';
 import { FormsModule } from '@angular/forms';
 import { FacturaViewComponent } from '../../../../shared/factura-view/factura-view.component';
 import { Factura } from '../../models/factura.model';
@@ -39,7 +40,7 @@ interface EditForm {
 @Component({
   selector: 'app-factura-empleado-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, FacturaViewComponent],
+  imports: [FormsModule, FacturaViewComponent, IconComponent],
   templateUrl: './factura-empleado-modal.component.html',
   styleUrl: './factura-empleado-modal.component.css',
 })
@@ -94,19 +95,18 @@ export class FacturaEmpleadoModalComponent implements OnChanges {
     return [];
   }
 
-  get statusClass(): string {
-    switch (this.invoice?.estado) {
-      case 'APROBADO':  return 'badge-approved';
-      case 'RECHAZADO': return 'badge-rejected';
-      default:          return 'badge-pending';
-    }
+  readonly money = money;
+  readonly longDate = longDate;
+
+  get statusTone(): string {
+    return this.invoice?.estado === 'APROBADO' ? 'ok' : this.invoice?.estado === 'RECHAZADO' ? 'danger' : 'warn';
   }
 
   get statusLabel(): string {
     switch (this.invoice?.estado) {
       case 'APROBADO':  return 'Aprobada';
       case 'RECHAZADO': return 'Rechazada';
-      default:          return 'Pendiente';
+      default:          return 'En revisión';
     }
   }
 
@@ -152,7 +152,7 @@ export class FacturaEmpleadoModalComponent implements OnChanges {
       numeroFactura:   this.invoice.numeroFactura ?? '',
       cufe:            this.invoice.cufe ?? '',
       fechaEmision:    this.invoice.fechaEmision?.substring(0, 10) ?? '',
-      categoriaId:     this.invoice.categoria ?? '',
+      categoriaId:     this.categorias.find(c => c.nombre === this.invoice?.categoria)?.id ?? '',
       monto:           this.invoice.montoTotal,
       subtotal:        this.invoice.subtotal ?? null,
       itbms:           this.invoice.itbms ?? null,

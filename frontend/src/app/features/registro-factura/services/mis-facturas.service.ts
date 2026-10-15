@@ -5,7 +5,8 @@ import { map, distinctUntilChanged } from 'rxjs/operators';
 
 import { Factura } from '../models/factura.model';
 import { FacturaApiResponse, mapFacturaApiToModel } from '../../admin/models/admin-factura.model';
-import { InvoiceFilterState, DEFAULT_FILTER } from '../../admin/models/invoice-filter-state.model';
+import { InvoiceFilterState, DEFAULT_FILTER, DEFAULT_SORT, InvoiceSort } from '../../admin/models/invoice-filter-state.model';
+import { applyInvoiceQuery, nextSort } from '../../admin/models/invoice-query';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +21,7 @@ export class MisFacturasService {
   private readonly _currentPage$  = new BehaviorSubject<number>(1);
   private readonly _itemsPerPage$ = new BehaviorSubject<number>(10);
   private readonly _filter$       = new BehaviorSubject<InvoiceFilterState>(DEFAULT_FILTER);
+  private readonly _sort$         = new BehaviorSubject<InvoiceSort>(DEFAULT_SORT);
 
   // ── Public streams ────────────────────────────────────────────────────────
   readonly isLoading$    = this._isLoading$.asObservable();
@@ -27,6 +29,8 @@ export class MisFacturasService {
   readonly currentPage$  = this._currentPage$.asObservable();
   readonly itemsPerPage$ = this._itemsPerPage$.asObservable();
   readonly filter$       = this._filter$.asObservable();
+  readonly sort$         = this._sort$.asObservable();
+  readonly facturas$     = this._facturas$.asObservable();
 
   /** Categorías únicas derivadas de la lista completa. */
   readonly availableCategories$: Observable<string[]> = this._facturas$.pipe(
@@ -37,50 +41,9 @@ export class MisFacturasService {
     distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
   );
 
-  /** Facturas filtradas. */
-  readonly filteredFacturas$: Observable<Factura[]> = combineLatest([
-    this._facturas$,
-    this._filter$,
-  ]).pipe(
-    map(([facturas, filter]) => {
-      let result = facturas;
-
-      // Text search
-      const term = filter.searchTerm.toLowerCase().trim();
-      if (term) {
-        result = result.filter(f =>
-          f.nombreProveedor?.toLowerCase().includes(term)  ||
-          f.rucProveedor?.toLowerCase().includes(term)     ||
-          f.numeroFactura?.toLowerCase().includes(term)    ||
-          f.cufe?.toLowerCase().includes(term)             ||
-          f.categoria?.toLowerCase().includes(term),
-        );
-      }
-
-      // Date range
-      if (filter.dateFrom) {
-        const from = new Date(filter.dateFrom).getTime();
-        result = result.filter(f => new Date(f.fechaEmision).getTime() >= from);
-      }
-      if (filter.dateTo) {
-        const to = new Date(filter.dateTo).getTime() + 86_400_000 - 1;
-        result = result.filter(f => new Date(f.fechaEmision).getTime() <= to);
-      }
-
-      // Categories
-      if (filter.selectedCategories.length > 0) {
-        const cats = new Set(filter.selectedCategories);
-        result = result.filter(f => f.categoria && cats.has(f.categoria));
-      }
-
-      // Status
-      if (filter.selectedStatuses.length > 0) {
-        const statuses = new Set(filter.selectedStatuses);
-        result = result.filter(f => f.estado && statuses.has(f.estado));
-      }
-
-      return result;
-    }),
+  /** Facturas filtradas y ordenadas. */
+  readonly filteredFacturas$: Observable<Factura[]> = combineLatest([this._facturas$, this._filter$, this._sort$]).pipe(
+    map(([facturas, filter, sort]) => applyInvoiceQuery(facturas, filter, sort)),
   );
 
   readonly totalItems$: Observable<number> = this.filteredFacturas$.pipe(
@@ -151,6 +114,10 @@ export class MisFacturasService {
     const current = this._filter$.getValue();
     this._filter$.next({ ...current, selectedStatuses: statuses });
     this._currentPage$.next(1);
+  }
+
+  toggleSort(key: InvoiceSort['key']): void {
+    this._sort$.next(nextSort(this._sort$.getValue(), key));
   }
 
   goToPage(page: number): void {

@@ -1,96 +1,60 @@
-<!-- ── Modal Cambiar Rol / Eliminar ─────────────────────────────── -->
-<app-user-action-modal
-  [visible]="actionModalVisible"
-  [mode]="actionModalMode"
-  [usuario]="actionModalUsuario"
-  (cerrar)="actionModalVisible = false"
-  (rolCambiado)="onRolCambiado($event)"
-  (eliminado)="onEliminado($event)"
-/>
+<app-user-action-modal [visible]="actionModalVisible" [mode]="actionModalMode" [usuario]="actionModalUsuario"
+  (cerrar)="actionModalVisible = false" (rolCambiado)="onRolCambiado($event)" (eliminado)="onEliminado($event)" />
 
-<!-- ── Modal Invitar Usuario ────────────────────────────────────── -->
-<app-user-invite-modal
-  [visible]="modalVisible"
-  [isLoading]="(isInviting$ | async) ?? false"
-  [success]="(inviteSuccess$ | async) ?? false"
-  (cerrar)="cerrarModal()"
-  (invitar)="onInvitar($event)"
-/>
+<app-user-invite-modal [visible]="modalVisible" [isLoading]="(isInviting$ | async) ?? false" [success]="(inviteSuccess$ | async) ?? false"
+  (cerrar)="cerrarModal()" (invitar)="onInvitar($event)" />
 
-@if (vm$ | async; as vm) {
+<app-suscripcion-banner />
 
-<div class="page-usuarios">
+<header class="ui-page-head">
+  <div>
+    <h1>Usuarios</h1>
+    <p>Las personas de tu organización y lo que cada una puede hacer.</p>
+  </div>
+  <div class="ui-page-actions">
+    <button type="button" class="ui-btn ui-btn--primary" (click)="abrirModal()">
+      <app-icon name="user-plus-linear" /> Invitar usuario
+    </button>
+  </div>
+</header>
 
-  <!-- ── Suscripción banner ───────────────────────────────────────── -->
-  <app-suscripcion-banner></app-suscripcion-banner>
-
-  <!-- ── Header ─────────────────────────────────────────────────────── -->
-  <div class="page-header">
-    <div class="header-title-block">
-      <div class="header-eyebrow">
-        <span class="header-dot"></span>
-        Panel de Administración
+<div class="layout">
+  <section class="ui-panel">
+    <div class="toolbar">
+      <label class="ui-search">
+        <app-icon name="magnifer-linear" />
+        <input class="ui-input" type="search" placeholder="Buscar por nombre o correo" aria-label="Buscar usuarios"
+               [ngModel]="busqueda()" (ngModelChange)="onBuscar($event)">
+      </label>
+      <div class="ui-seg" role="group" aria-label="Filtrar por rol">
+        @for (r of roles; track r) {
+          <button type="button" [attr.aria-pressed]="rol() === r" (click)="onRol(r)">
+            {{ r === 'Admin' ? 'Admins' : r === 'Contador' ? 'Contadores' : r === 'Empleado' ? 'Empleados' : 'Todos' }}
+            <span class="seg-count num">{{ conteo()[r] }}</span>
+          </button>
+        }
       </div>
-      <h1 class="page-title">Gestión de Usuarios</h1>
-      <p class="page-subtitle">Administra los miembros de tu equipo, sus roles y permisos de acceso</p>
     </div>
 
-    <div class="header-actions">
-      <button class="btn-invitar" (click)="abrirModal()">
-        <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
-          <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.8"/>
-          <path d="M10 6.5v7M6.5 10h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        Invitar Nuevo Usuario
-      </button>
-    </div>
-  </div>
+    @if (error$ | async; as err) {
+      <div class="ui-alert state" role="alert"><app-icon name="danger-triangle-linear" /> {{ err }}</div>
+    }
 
-  <!-- ── Error global ───────────────────────────────────────────────── -->
-  @if (vm.error) {
-    <div class="alert-error">{{ vm.error }}</div>
-  }
+    @if ((isLoading$ | async) && !usuarios().length) {
+      <div class="loading">@for (i of [1, 2, 3, 4]; track i) { <div class="ui-skeleton row-skel"></div> }</div>
+    } @else {
+      <app-user-table
+        [usuarios]="paginados()"
+        [totalCount]="filtrados().length"
+        [paginaActual]="pagina()"
+        [itemsPorPagina]="pageSize"
+        [currentUserId]="currentUserId()"
+        [hasFilter]="!!busqueda() || rol() !== 'Todos'"
+        (pageChange)="pagina.set($event)"
+        (menuAccion)="onMenuAccion($event)"
+        (invitar)="abrirModal()" />
+    }
+  </section>
 
-  <!-- ── Barra de búsqueda y contador ──────────────────────────────── -->
-  <div class="toolbar">
-    <div class="search-wrapper">
-      <svg class="search-icon" viewBox="0 0 20 20" fill="none" width="16" height="16">
-        <circle cx="8.5" cy="8.5" r="5.5" stroke="#94a3b8" stroke-width="1.8"/>
-        <path d="M13.5 13.5L17 17" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-      <input
-        class="search-input"
-        type="text"
-        placeholder="Buscar por nombre, correo o rol…"
-        [ngModel]="busqueda"
-        (ngModelChange)="onBuscar($event)"
-      />
-    </div>
-    <span class="total-badge">{{ vm.total }} usuarios en total</span>
-  </div>
-
-  <!-- ── Skeleton mientras carga ────────────────────────────────────── -->
-  @if (vm.isLoading) {
-    <div class="loading-state">
-      <div class="spinner-lg"></div>
-      <p>Cargando usuarios…</p>
-    </div>
-  } @else {
-    <!-- ── Tabla ─────────────────────────────────────────────────────── -->
-    <app-user-table
-      [usuarios]="vm.paginados"
-      [totalCount]="vm.total"
-      [paginaActual]="paginaActual"
-      [itemsPorPagina]="itemsPorPagina"
-      (pageChange)="onPageChange($event)"
-      (menuAccion)="onMenuAccion($event)"
-    />
-  }
-
-  <!-- ── Guía de roles ─────────────────────────────────────────────── -->
   <app-user-role-guide />
-
 </div>
-
-}
-

@@ -1,5 +1,5 @@
 :host {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: var(--font);
   display: block;
 }
 
@@ -16,7 +16,7 @@ header {
 
 h1 {
   font-size: 1.8rem;
-  color: #0f172a;
+  color: var(--ink);
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.025em;
@@ -24,7 +24,7 @@ h1 {
 
 p {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--muted);
   line-height: 1.5;
   margin: 0;
 }
@@ -53,7 +53,7 @@ p {
   width: 100%; /* Por defecto toma todo el ancho en móviles */
   max-width: 200px; /* Pero se limita en pantallas más grandes */
   padding: 14px 24px;
-  background-color: #2563eb;
+  background-color: var(--brand);
   color: white;
   border: none;
   border-radius: 8px;
@@ -64,12 +64,12 @@ p {
 }
 
 .next-btn:hover:not(:disabled) {
-  background-color: #1d4ed8;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  background-color: var(--brand-deep);
+  box-shadow: 0 4px 12px rgba(29,88,239, 0.25);
 }
 
 .next-btn:disabled {
-  background-color: #94a3b8;
+  background-color: var(--faint);
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -92,11 +92,11 @@ app-input {
   text-align: center;
   margin-top: 16px;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .login-link a {
-  color: #2563eb;
+  color: var(--brand);
   font-weight: 600;
   text-decoration: none;
 }

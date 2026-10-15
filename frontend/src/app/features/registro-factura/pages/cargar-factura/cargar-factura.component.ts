@@ -1,6 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CargarArchivoComponent } from '../../components/cargar-facturas/cargar-archivo/cargar-archivo.component';
 
@@ -11,11 +10,15 @@ import { FacturaFormComponent } from '../../components/cargar-facturas/factura-f
 import { QrScannerService } from '../../../../core/services/qr-scanner.service';
 import { FacturaViewComponent } from '../../../../shared/factura-view/factura-view.component';
 import { ToastService } from '../../../../shared/toast/toast.service';
+import { IconComponent } from '../../../../shared/icon/icon.component';
+import { AuthService } from '../../../auth/services/auth.service';
+import { Role } from '../../../../core/models/roles.enum';
+import { money } from '../../../../shared/format/format';
 
 @Component({
   selector: 'app-cargar-factura',
   standalone: true,
-  imports: [CommonModule, CargarArchivoComponent, FacturaFormComponent, FacturaViewComponent],
+  imports: [RouterLink, CargarArchivoComponent, FacturaFormComponent, FacturaViewComponent, IconComponent],
   templateUrl: './cargar-factura.component.html',
   styleUrl: './cargar-factura.component.css'
 })
@@ -40,11 +43,24 @@ export class CargarFacturaComponent implements OnInit, OnDestroy {
   imageUrls: string[] = [];
 
   private subs = new Subscription();
+  private readonly auth = inject(AuthService);
+  readonly money = money;
+
+  /** Factura recién guardada (paso 3). */
+  guardada: { proveedor: string; total: number } | null = null;
+
+  get paso(): 1 | 2 | 3 {
+    return this.guardada ? 3 : this.resultadoOCR ? 2 : 1;
+  }
+
+  /** A dónde ir para ver la factura según el rol. */
+  get listaUrl(): string {
+    return this.auth.userRole() === Role.EMPLEADO ? '/facturas' : '/admin/facturas';
+  }
 
   constructor(
     private registroFacturaService: RegistroFacturaService,
     private qrScannerService: QrScannerService,
-    private router: Router,
     private toast: ToastService,
   ) {}
 
@@ -81,16 +97,13 @@ export class CargarFacturaComponent implements OnInit, OnDestroy {
       if (qr) {
         clientQrData = qr;
         this.qrDetectado = true;
-        this.loadingMensaje = 'QR detectado — verificando con el servidor…';
-        console.log('[CargarFactura] QR detectado en cliente:', qr);
+        this.loadingMensaje = 'Código QR encontrado. Consultando la DGI…';
       } else {
         this.qrDetectado = false;
-        this.loadingMensaje = 'Procesando Factura. Esto puede tardar unos segundos…';
-        console.log('[CargarFactura] Sin QR en cliente → el backend usuara IA.');
+        this.loadingMensaje = 'Sin código QR. Leyendo la foto con IA, puede tardar unos segundos…';
       }
     } catch (err) {
       // El escaneo QR es opcional — si falla, continuar sin él
-      console.warn('[CargarFactura] Error en escaneo QR del cliente:', err);
     }
 
     // ── Fase 2: enviar al backend con el clientQrData (si lo hay) ────────────
@@ -109,13 +122,9 @@ export class CargarFacturaComponent implements OnInit, OnDestroy {
                 : (response.data.urlImagen ? [response.data.urlImagen] : []);
         }
         this.isLoading = false;
-        this.toast.info(
-          'Datos extraídos',
-          'Revisa y confirma la información detectada antes de guardar.',
-        );
+
       },
       error: (error) => {
-        console.error('Error al procesar la factura:', error);
         const msg = error?.error?.message ?? 'Error al procesar la factura. Intente nuevamente.';
         this.errorMensaje = msg;
         this.isLoading = false;
@@ -129,6 +138,7 @@ export class CargarFacturaComponent implements OnInit, OnDestroy {
   }
 
   limpiarEstadoPadre() {
+    this.guardada = null;
     this.resultadoOCR = null;
     this.errorMensaje = null;
     this.qrDetectado = null;
@@ -144,13 +154,10 @@ export class CargarFacturaComponent implements OnInit, OnDestroy {
     this.registroFacturaService.createFactura(dto).subscribe({
       next: () => {
         this.isSaving = false;
-        this.toast.success(
-          'Factura registrada',
-          'La factura se guardó correctamente.',
-        );
+        this.guardada = { proveedor: dto.nombreProveedor, total: dto.monto };
+        this.toast.success('Factura guardada', 'Quedó pendiente de aprobación.');
       },
       error: (error) => {
-        console.error('Error al crear la factura:', error);
         const msg = error?.error?.message ?? 'Error al guardar la factura. Intente nuevamente.';
         this.errorMensaje = msg;
         this.isSaving = false;

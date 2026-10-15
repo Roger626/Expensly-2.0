@@ -1,12 +1,13 @@
 import { Component, Input, Self } from '@angular/core';
 import { ReactiveFormsModule, ControlValueAccessor, NgControl } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { NgIf } from '@angular/common';
+import { IconComponent } from '../../icon/icon.component';
 
 
 @Component({
   selector: 'app-input',
   standalone:true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, NgIf, IconComponent],
   templateUrl: './input.component.html',
   styleUrl: './input.component.css'
 })
@@ -17,6 +18,8 @@ export class InputComponent implements ControlValueAccessor {
   @Input() showPasswordToggle: boolean = true
 
   value: any
+  private static seq = 0;
+  readonly inputId = `fld-${++InputComponent.seq}`;
   disable:boolean = false
   passwordVisible = false
 

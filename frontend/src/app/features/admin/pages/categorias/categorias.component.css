@@ -1,0 +1,44 @@
+:host { display: block; max-width: 1120px; }
+
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--line-2); }
+.toolbar .ui-search { flex: 1; max-width: 360px; }
+.count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ui-alert { margin: 16px 20px 0; align-items: center; }
+.ui-alert button { margin-left: auto; }
+
+.name { display: flex; align-items: center; gap: 10px; }
+.swatch {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px;
+  background: var(--brand-soft); color: var(--brand); --ico-tone: var(--brand); --ico-tone-o: .3;
+}
+.swatch app-icon { width: 17px; height: 17px; }
+.name b { font-weight: 600; }
+.code-chip { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--line-2); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.none { font-size: 13px; color: var(--faint); }
+
+.actions { text-align: right; white-space: nowrap; width: 1%; }
+.actions .ui-btn { opacity: .55; transition: opacity 120ms ease, background-color 120ms ease; }
+tr:hover .actions .ui-btn, .actions .ui-btn:focus-visible { opacity: 1; }
+.actions .del:hover { color: var(--danger); background: var(--danger-soft); }
+
+tr.editing td, tr.deleting td { background: var(--sunken); }
+.ui-table tbody tr.editing:hover, .ui-table tbody tr.deleting:hover { background: transparent; }
+.editor { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; align-items: end; gap: 12px; }
+.editor .ui-error { grid-column: 1 / -1; margin: 0; }
+.editor-actions { display: flex; gap: 6px; }
+.opt { font-weight: 500; color: var(--faint); }
+
+.confirm { display: flex; align-items: center; gap: 12px; color: var(--ink-2); }
+.confirm app-icon { width: 26px; height: 26px; color: var(--danger); --ico-tone: var(--danger); --ico-tone-o: .3; }
+.confirm p { margin: 0; flex: 1; font-size: 14px; }
+
+.foot-note { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 20px; border-top: 1px solid var(--line-2); font-size: 13px; color: var(--muted); }
+.foot-note app-icon { width: 18px; height: 18px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .editor { grid-template-columns: 1fr; }
+  .confirm { flex-wrap: wrap; }
+  .toolbar { flex-wrap: wrap; }
+}

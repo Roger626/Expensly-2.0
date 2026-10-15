@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { ProcesarFacturaResponse, FacturaProcesamientoResult, CreateFacturaDto, Factura } from '../../../models/factura.model';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { InputComponent } from '../../../../../shared/input/input/input.component';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../../shared/icon/icon.component';
 import { CategoriaDto } from '../../../models/categoria.model';
 
 
@@ -10,16 +10,20 @@ import { CategoriaDto } from '../../../models/categoria.model';
 @Component({
   selector: 'app-factura-form',
   standalone: true,
-  imports: [ReactiveFormsModule, InputComponent, CommonModule],
+  imports: [ReactiveFormsModule, InputComponent, IconComponent],
   templateUrl: './factura-form.component.html',
   styleUrl: './factura-form.component.css'
 })
 export class FacturaFormComponent implements OnChanges {
   @Input() invoiceData: ProcesarFacturaResponse | null = null;
   @Input() categorias: CategoriaDto[] = [];
-  @Input() updateInvoice: Factura | null = null;
   @Input() isSaving = false;
+  @Input() origen: 'qr' | 'ia' | null = null;
   @Output() submitInvoice = new EventEmitter<CreateFacturaDto>();
+  @Output() discard = new EventEmitter<void>();
+
+  formError: string | null = null;
+  cufeCopied = false;
 
   
   facturaForm: FormGroup;
@@ -32,9 +36,10 @@ export class FacturaFormComponent implements OnChanges {
   copyCufe(): void {
     const cufe = this.facturaForm.get('cufe')?.value;
     if (!cufe) return;
-    navigator.clipboard?.writeText(cufe).catch(() => {
-      /* ignore clipboard errors silently */
-    });
+    navigator.clipboard?.writeText(cufe).then(() => {
+      this.cufeCopied = true;
+      setTimeout(() => (this.cufeCopied = false), 1800);
+    }).catch(() => { /* sin permiso de portapapeles */ });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -52,20 +57,6 @@ export class FacturaFormComponent implements OnChanges {
       });
     }
 
-    if (changes['updateInvoice'] && this.updateInvoice) {
-      this.facturaForm.patchValue({
-        nombreComercio: this.updateInvoice.nombreProveedor,
-        ruc: this.updateInvoice.rucProveedor,
-        dv: this.updateInvoice.dv ?? '',
-        numeroFactura: this.updateInvoice.numeroFactura,
-        fechaEmision: this.toISODate(this.updateInvoice.fechaEmision),
-        cufe: this.updateInvoice.cufe,
-        subtotal: this.updateInvoice.subtotal ?? 0,
-        itbms: this.updateInvoice.itbms ?? 0,
-        total: this.updateInvoice.montoTotal,
-        motivoRechazo: this.updateInvoice.motivoRechazo ?? '',
-      });
-    }
   }
 
   /** Convierte "14/noviembre/2025" o "14/11/2025" a "2025-11-14" para <input type="date"> */
@@ -102,11 +93,18 @@ export class FacturaFormComponent implements OnChanges {
       itbms: new FormControl(0, [Validators.min(0)]),
       total: new FormControl(0, [Validators.required, Validators.min(0)]),
       categoria: new FormControl("", [Validators.required]),
-      motivoRechazo: new FormControl("")
     });
   }
 
+  /** ITBMS esperado (7 % del subtotal) para avisar si lo extraído no cuadra. */
+  get descuadre(): boolean {
+    const { subtotal, itbms, total } = this.facturaForm.value;
+    if (!subtotal || total == null) return false;
+    return Math.abs((subtotal ?? 0) + (itbms ?? 0) - total) > 0.02;
+  }
+
   onSubmit() {
+    this.formError = null;
     if (this.facturaForm.valid && this.invoiceData) {
       const values = this.facturaForm.value;
       const base: FacturaProcesamientoResult = this.invoiceData.data;
@@ -160,24 +158,14 @@ export class FacturaFormComponent implements OnChanges {
       }
 
       if (dto.imagenesFactura.length === 0) {
-        console.error('Faltan datos de la imagen', dto);
-        alert('Error: No se ha podido recuperar la información de la imagen. Intente subirla nuevamente.');
+        this.formError = 'No encontramos la imagen subida. Descarta y vuelve a subir la foto.';
         return;
       }
 
-      console.log('Enviando factura:', dto);
       this.submitInvoice.emit(dto);
     } else {
-      console.warn('Formulario invalido:', this.facturaForm.errors);
-      // Log individual errors
-      Object.keys(this.facturaForm.controls).forEach(key => {
-        const controlErrors = this.facturaForm.get(key)?.errors;
-        if (controlErrors != null) {
-          console.log('Key control: ' + key + ', keyError: ', controlErrors);
-        }
-      });
       this.facturaForm.markAllAsTouched();
-      alert('Por favor, complete todos los campos requeridos correctamente.');
+      this.formError = 'Completa los campos marcados para guardar la factura.';
     }
   }
 

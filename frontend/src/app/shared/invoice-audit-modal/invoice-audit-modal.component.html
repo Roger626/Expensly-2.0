@@ -1,252 +1,130 @@
 @if (isOpen && invoice) {
-  <!-- Backdrop -->
-  <div class="modal-backdrop" (click)="onClose()"></div>
+  <div class="ui-review__backdrop" (click)="onClose()"></div>
 
-  <!-- Panel -->
-  <div class="modal-panel" role="dialog" aria-modal="true">
-
-    <!-- Franja de acento (igual que form-card::before) -->
-    <div class="modal-stripe"></div>
-
-    <!-- ── TOP BAR ───────────────────────────────────────────── -->
-    <div class="modal-topbar">
-      <div class="topbar-left">
-        <span class="tag-audit">REVISIÓN AUDITORÍA</span>
-        <span class="badge-status" [ngClass]="statusClass">{{ statusLabel }}</span>
-        <span class="invoice-title">Factura #{{ invoice.numeroFactura }}</span>
+  <div class="ui-review" role="dialog" aria-modal="true" aria-labelledby="audit-title">
+    <!-- Encabezado -->
+    <header class="ui-review__top">
+      <div class="ui-review__title">
+        <span class="ui-badge ui-badge--{{ statusTone }}">{{ statusLabel }}</span>
+        <h2 id="audit-title">{{ invoice.nombreProveedor || 'Proveedor sin nombre' }}</h2>
+        <span class="ui-review__sub num">Factura N.º {{ invoice.numeroFactura }} · {{ longDate(invoice.fechaEmision) }}</span>
       </div>
-
-      <div class="topbar-right">
-        <!-- Navigation -->
-        <div class="nav-arrows">
-          <button class="nav-btn" (click)="prev()" [disabled]="!hasPrev" title="Anterior (←)">
-            <svg viewBox="0 0 16 16" fill="none"><path d="M10 12l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <span class="nav-counter">{{ currentIndex + 1 }} / {{ invoices.length }}</span>
-          <button class="nav-btn" (click)="next()" [disabled]="!hasNext" title="Siguiente (→)">
-            <svg viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
-
-        <!-- Expand & Close -->
-        <button class="icon-btn" title="Cerrar (Esc)" (click)="onClose()">
-          <svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5l-10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="ui-review__tools">
+        @if (invoices.length > 1) {
+          <div class="ui-review__pager" role="group" aria-label="Navegar facturas">
+            <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon" (click)="prev()" [disabled]="!hasPrev" aria-label="Factura anterior (←)">
+              <app-icon name="alt-arrow-left-linear" />
+            </button>
+            <span class="num">{{ currentIndex + 1 }} de {{ invoices.length }}</span>
+            <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon" (click)="next()" [disabled]="!hasNext" aria-label="Factura siguiente (→)">
+              <app-icon name="alt-arrow-right-linear" />
+            </button>
+          </div>
+        }
+        <button type="button" class="ui-btn ui-btn--ghost ui-btn--icon" (click)="onClose()" aria-label="Cerrar (Esc)">
+          <app-icon name="close-linear" />
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- ── BODY ──────────────────────────────────────────────── -->
-    <div class="modal-body">
-
-      <!-- Left: Document viewer -->
-      <div class="panel-left">
-        <div class="doc-label">
-          <div class="doc-label-icon">
-            <svg viewBox="0 0 16 16" fill="none" width="15" height="15"><path d="M4 1h6l4 4v10H4V1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 1v4h4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="doc-label-text">
-            <span class="doc-label-title">Documento Original</span>
-            <span class="doc-label-sub">Imagen de la factura</span>
-          </div>
-        </div>
+    <div class="ui-review__body">
+      <!-- Documento -->
+      <div class="ui-review__doc">
         @if (imageUrls.length > 0) {
-          <app-factura-view [imageUrls]="imageUrls"></app-factura-view>
+          <app-factura-view [imageUrls]="imageUrls" />
         } @else {
-          <div class="no-image">
-            <svg viewBox="0 0 48 48" fill="none"><rect x="6" y="8" width="36" height="32" rx="3" stroke="#94a3b8" stroke-width="2"/><path d="M6 16h36" stroke="#94a3b8" stroke-width="2"/><path d="M14 24h8M14 30h20" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/></svg>
-            <p>Sin imagen de factura</p>
+          <div class="ui-empty"><app-icon name="gallery-remove-bold-duotone" /><h3>Sin imagen</h3><p>Esta factura se registró sin foto adjunta.</p></div>
+        }
+      </div>
+
+      <!-- Datos -->
+      <div class="ui-review__data">
+        <div class="ui-review__amount">
+          <span class="ui-review__lbl">Total</span>
+          <b class="num">{{ money(invoice.montoTotal) }}</b>
+          <dl class="ui-review__breakdown num">
+            <div><dt>Subtotal</dt><dd>{{ money(invoice.subtotal ?? invoice.montoTotal - (invoice.itbms ?? 0)) }}</dd></div>
+            <div><dt>ITBMS</dt><dd>{{ money(invoice.itbms ?? 0) }}</dd></div>
+          </dl>
+          @if (itbmsDescuadre) {
+            <p class="ui-review__flag"><app-icon name="danger-triangle-linear" /> Subtotal + ITBMS no suma el total. Revisa la imagen.</p>
+          }
+        </div>
+
+        <dl class="ui-review__fields">
+          <div><dt>Proveedor</dt><dd>{{ invoice.nombreProveedor || '—' }}</dd></div>
+          <div class="ui-review__pair">
+            <div><dt>RUC</dt><dd class="num">{{ invoice.rucProveedor || '—' }}</dd></div>
+            <div><dt>DV</dt><dd class="num">{{ invoice.dv || '—' }}</dd></div>
+          </div>
+          <div class="ui-review__pair">
+            <div><dt>Categoría</dt><dd>{{ invoice.categoria || 'Sin categoría' }}</dd></div>
+            <div><dt>Emisión</dt><dd class="num">{{ longDate(invoice.fechaEmision) }}</dd></div>
+          </div>
+          <div>
+            <dt>Registrada por</dt>
+            <dd><span class="ui-person"><span class="ui-avatar">{{ initials(invoice.nombreEmpleado) }}</span>{{ invoice.nombreEmpleado || 'Sin empleado' }}</span></dd>
+          </div>
+          <div>
+            <dt>CUFE</dt>
+            <dd>
+              @if (invoice.cufe) {
+                <div class="ui-review__cufe">
+                  <app-icon name="qr-code-linear" class="ui-review__cufe-ico" />
+                  <code class="num">{{ invoice.cufe }}</code>
+                  <button type="button" class="ui-btn ui-btn--outline ui-btn--sm" (click)="copyCufe()" [attr.aria-label]="cufeCopied ? 'CUFE copiado' : 'Copiar CUFE'">
+                    <app-icon [name]="cufeCopied ? 'check-circle-linear' : 'copy-linear'" /> {{ cufeCopied ? 'Copiado' : 'Copiar' }}
+                  </button>
+                </div>
+                <span class="ui-review__ok">Factura electrónica validada con la DGI.</span>
+              } @else {
+                <span class="ui-review__warn">Sin CUFE: comprobante leído con IA, revisa los datos contra la imagen.</span>
+              }
+            </dd>
+          </div>
+        </dl>
+
+        @if (invoice.motivoRechazo && !showRejectForm) {
+          <div class="ui-alert">
+            <app-icon name="close-circle-linear" />
+            <div><b>Motivo del rechazo</b><br>{{ invoice.motivoRechazo }}</div>
           </div>
         }
-      </div>
 
-      <!-- Right: Audit form -->
-      <div class="panel-right">
-        <div class="audit-form">
-
-          <!-- Proveedor (DGI Panamá) -->
-          <section class="af-section">
-            <h4 class="af-section-title">
-              <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5V4a3 3 0 0 1 6 0v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              Información del Comercio
-            </h4>
-            <div class="af-field-row">
-              <div class="af-field">
-                <label>Nombre del Comercio</label>
-                <div class="af-value">{{ invoice.nombreProveedor }}</div>
-              </div>
-            </div>
-            <div class="af-field-row two-cols">
-              <div class="af-field">
-                <label>RUC</label>
-                <div class="af-value mono">{{ invoice.rucProveedor }}</div>
-              </div>
-              <div class="af-field">
-                <label>DV</label>
-                <div class="af-value mono">{{ invoice.dv || '—' }}</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- CUFE (verificación fiscal DGI) -->
-          <section class="af-section">
-            <h4 class="af-section-title">
-              <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h2M5 8h2M5 11h2M9.5 5h1.5M9.5 8h1.5M9.5 11h1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-              Verificación Fiscal (CUFE)
-            </h4>
-            <div class="af-field-row">
-              <div class="af-field">
-                <label>Código Único de Factura Electrónica</label>
-                <div class="af-value-copy">
-                  <div class="af-value mono af-value-cufe" [title]="invoice.cufe || 'Sin CUFE'">
-                    {{ invoice.cufe || 'Sin CUFE (comprobante no fiscal)' }}
-                  </div>
-                  @if (invoice.cufe) {
-                    <button
-                      type="button"
-                      class="btn-copy-cufe"
-                      [class.copied]="cufeCopied"
-                      (click)="copyCufe()"
-                      [title]="cufeCopied ? 'Copiado' : 'Copiar CUFE'"
-                    >
-                      @if (cufeCopied) {
-                        <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><polyline points="3 8 6.5 12 13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        Copiado
-                      } @else {
-                        <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><rect x="5.5" y="5.5" width="8" height="8" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 10.5V3a1 1 0 0 1 1-1h7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                        Copiar
-                      }
-                    </button>
-                  }
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Desglose Financiero (ITBMS) -->
-          <section class="af-section">
-            <h4 class="af-section-title">
-              <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v1.5M8 9.5V11M6.5 7.5A1.5 1.5 0 0 1 8 6a1.5 1.5 0 0 1 0 3 1.5 1.5 0 0 0 0 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-              Desglose Financiero
-            </h4>
-            <div class="af-field-row two-cols">
-              <div class="af-field">
-                <label>Subtotal</label>
-                <div class="af-value">{{ invoice.subtotal ?? invoice.montoTotal | currency:'USD':'symbol':'1.2-2' }}</div>
-              </div>
-              <div class="af-field">
-                <label>ITBMS 7%</label>
-                <div class="af-value">{{ invoice.itbms ?? 0 | currency:'USD':'symbol':'1.2-2' }}</div>
-              </div>
-            </div>
-            <div class="af-field-row">
-              <div class="af-field total-field">
-                <label>Total a Pagado</label>
-                <div class="af-value af-total">{{ invoice.montoTotal | currency:'USD':'symbol':'1.2-2' }}</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Fechas y categoría -->
-          <section class="af-section">
-            <h4 class="af-section-title">
-              <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 2v2M11 2v2M2 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              Fechas y Clasificación
-            </h4>
-            <div class="af-field-row two-cols">
-              <div class="af-field">
-                <label>Fecha de Emisión</label>
-                <div class="af-value">{{ invoice.fechaEmision | date:'d MMM yyyy' }}</div>
-              </div>
-              <div class="af-field">
-                <label>Categoría del Gasto</label>
-                <div class="af-value">{{ invoice.categoria ?? '—' }}</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Colaborador -->
-          <section class="af-section">
-            <h4 class="af-section-title">
-              <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              Colaborador
-            </h4>
-            <div class="af-field-row">
-              <div class="af-field">
-                <label>Registrado por</label>
-                <div class="af-value">{{ invoice.nombreEmpleado ?? '—' }}</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Rejection reason form (toggle) -->
-          @if (showRejectForm) {
-            <section class="af-section rejection-panel">
-              <h4 class="af-section-title rejection-ttl">
-                <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M8 2l6.5 11H1.5L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="8" y1="7" x2="8" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="12" r="0.5" fill="currentColor" stroke="currentColor"/></svg>
-                Motivo de Rechazo <span class="required-mark">*</span>
-              </h4>
-              <textarea
-                class="rejection-ta"
-                [(ngModel)]="motivoRechazo"
-                placeholder="Ej: Monto no coincide con la factura, datos del proveedor ilegibles…"
-                rows="3"
-                autofocus>
-              </textarea>
-              <p *ngIf="motivoRechazo.trim().length === 0" class="reject-hint">
-                El motivo es obligatorio para rechazar.
-              </p>
-            </section>
-          }
-
-          <!-- Existing rejection reason (read-only) -->
-          @if (invoice.motivoRechazo && !showRejectForm) {
-            <section class="af-section rejection-panel">
-              <h4 class="af-section-title rejection-ttl">
-                <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M8 2l6.5 11H1.5L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                Motivo de Rechazo
-              </h4>
-              <div class="af-value">{{ invoice.motivoRechazo }}</div>
-            </section>
-          }
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ── FOOTER ─────────────────────────────────────────────── -->
-    <div class="modal-footer">
-      <div class="footer-left">
-        <button class="btn-cancel" (click)="onClose()">
-          Cancelar y Salir
-        </button>
-      </div>
-
-      <div class="footer-right">
-        @if (!showRejectForm) {
-          <button class="btn-reject" (click)="onRejectClick()" [disabled]="isSaving">
-            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Rechazar Factura
-          </button>
-          <button class="btn-approve" (click)="onApprove()" [disabled]="isSaving">
-            <span *ngIf="isSaving" class="spinner-sm"></span>
-            <svg *ngIf="!isSaving" viewBox="0 0 16 16" fill="none" width="14" height="14"><polyline points="3 8 6.5 12 13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Aprobar &amp; Guardar
-          </button>
-        } @else {
-          <button class="btn-cancel" (click)="onCancelReject()" [disabled]="isSaving">
-            Cancelar
-          </button>
-          <button
-            class="btn-reject-confirm"
-            (click)="onRejectConfirm()"
-            [disabled]="isSaving || !motivoRechazo.trim()">
-            <span *ngIf="isSaving" class="spinner-sm"></span>
-            <svg *ngIf="!isSaving" viewBox="0 0 16 16" fill="none" width="14" height="14"><line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Confirmar Rechazo
-          </button>
+        @if (showRejectForm) {
+          <form class="ui-review__form" (ngSubmit)="onRejectConfirm()">
+            <label class="ui-label" for="audit-motivo">Motivo del rechazo</label>
+            <textarea id="audit-motivo" class="ui-textarea" name="motivo" rows="3" maxlength="300" [(ngModel)]="motivoRechazo"
+                      placeholder="Ej. el monto no coincide con la imagen o el gasto no es de la empresa" autofocus></textarea>
+            <span class="ui-hint">El empleado verá este texto en su historial.</span>
+          </form>
         }
       </div>
     </div>
 
+    <!-- Acciones -->
+    <footer class="ui-review__foot">
+      <span class="ui-review__keys" aria-hidden="true"><kbd>←</kbd><kbd>→</kbd> navegar · <kbd>Esc</kbd> cerrar
+        @if (showRejectForm || estado !== 'APROBADO') { · <kbd>⌘</kbd><kbd>↵</kbd> {{ showRejectForm ? 'rechazar' : 'aprobar' }} }</span>
+      <div class="ui-review__actions">
+        @if (!showRejectForm) {
+          @if (estado !== 'RECHAZADO') {
+            <button type="button" class="ui-btn ui-btn--danger" (click)="onRejectClick()" [disabled]="isSaving">
+              <app-icon name="close-circle-linear" /> Rechazar
+            </button>
+          }
+          @if (estado !== 'APROBADO') {
+            <button type="button" class="ui-btn ui-btn--ok" (click)="onApprove()" [disabled]="isSaving">
+              <app-icon name="check-circle-linear" /> {{ isSaving ? 'Guardando…' : 'Aprobar' }}
+            </button>
+          }
+        } @else {
+          <button type="button" class="ui-btn ui-btn--ghost" (click)="onCancelReject()" [disabled]="isSaving">Volver</button>
+          <button type="button" class="ui-btn ui-btn--danger-solid" (click)="onRejectConfirm()" [disabled]="isSaving || !motivoRechazo.trim()">
+            {{ isSaving ? 'Guardando…' : 'Rechazar factura' }}
+          </button>
+        }
+      </div>
+    </footer>
   </div>
 }

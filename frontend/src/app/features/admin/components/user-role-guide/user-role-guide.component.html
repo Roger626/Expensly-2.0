@@ -1,51 +1,17 @@
-<div class="role-guide-card">
-  <h3 class="role-guide-title">Guía de Roles y Accesos</h3>
-
-  <ul class="roles-list">
-
-    <!-- Admin -->
-    <li class="role-item">
-      <span class="role-icon role-admin">
-        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
-          <path
-            d="M10 2l2.4 4.9 5.4.78-3.9 3.8.92 5.37L10 14.4l-4.82 2.53.92-5.37L2.2 7.68l5.4-.78z"
-            stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"
-          />
-        </svg>
-      </span>
-      <div class="role-text">
-        <strong>Administradores</strong>
-        <p>Control total sobre configuración, usuarios y facturación.</p>
-      </div>
+<aside class="ui-panel guide" aria-labelledby="guide-title">
+  <h2 id="guide-title">Qué puede hacer cada rol</h2>
+  <ul>
+    <li>
+      <app-icon name="crown-minimalistic-bold-duotone" class="ico admin" />
+      <div><b>Admin</b><p>Todo lo del contador, más usuarios, plan y facturación de la cuenta.</p></div>
     </li>
-
-    <!-- Contador -->
-    <li class="role-item">
-      <span class="role-icon role-contador">
-        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
-          <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M7 8h6M7 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <div class="role-text">
-        <strong>Contadores</strong>
-        <p>Revisan facturas, exportan reportes y gestionan categorías.</p>
-      </div>
+    <li>
+      <app-icon name="calculator-bold-duotone" class="ico contador" />
+      <div><b>Contador</b><p>Revisa, aprueba o rechaza facturas, exporta a Excel y administra categorías.</p></div>
     </li>
-
-    <!-- Empleado -->
-    <li class="role-item">
-      <span class="role-icon role-empleado">
-        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
-          <circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M3 17c0-3.31 3.13-6 7-6s7 2.69 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <div class="role-text">
-        <strong>Empleados</strong>
-        <p>Cargan facturas y consultan su historial de reembolsos.</p>
-      </div>
+    <li>
+      <app-icon name="user-bold-duotone" class="ico empleado" />
+      <div><b>Empleado</b><p>Sube sus facturas y sigue su estado. Solo ve las suyas.</p></div>
     </li>
-
   </ul>
-</div>
+</aside>

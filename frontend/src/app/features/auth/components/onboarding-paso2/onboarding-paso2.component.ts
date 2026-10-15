@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Component, Output, EventEmitter } from '@angular/core';
 import { InputComponent } from '../../../../shared/input/input/input.component';
 import { FormBuilder, ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
@@ -6,7 +7,7 @@ import { passwordMatchValidator } from '../../../../shared/validators/password.v
 @Component({
   selector: 'app-onboarding-paso2',
   standalone: true,
-  imports: [InputComponent, ReactiveFormsModule],
+  imports: [IconComponent, InputComponent, ReactiveFormsModule],
   templateUrl: './onboarding-paso2.component.html',
   styleUrl: './onboarding-paso2.component.css'
 })

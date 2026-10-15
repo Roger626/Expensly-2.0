@@ -1,20 +1,20 @@
 /* ===================================================================
    FACTURA-VIEW  —  Diseño alineado con el sistema de diseño de la app
-   Paleta: indigo #6366f1, texto #0f172a, superficie #f8fafc
+   Paleta: indigo var(--brand), texto var(--ink), superficie var(--sunken)
 =================================================================== */
 
 /* ── Variables locales (igual que factura-form) ────────────────────── */
 :host {
-  --primary:       #6366f1;
-  --primary-dark:  #4f46e5;
-  --primary-light: #e0e7ff;
-  --primary-glow:  rgba(99, 102, 241, 0.18);
-  --text-main:     #0f172a;
-  --text-muted:    #64748b;
-  --text-subtle:   #94a3b8;
-  --border:        #e2e8f0;
+  --primary:       var(--brand);
+  --primary-dark:  var(--brand);
+  --primary-light: var(--brand-soft);
+  --primary-glow:  rgba(29,88,239, 0.18);
+  --text-main:     var(--ink);
+  --text-muted:    var(--muted);
+  --text-subtle:   var(--faint);
+  --border:        var(--line);
   --surface:       #ffffff;
-  --surface-2:     #f8fafc;
+  --surface-2:     var(--sunken);
   --radius-card:   22px;
   --radius-md:     12px;
   --transition:    all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
@@ -27,9 +27,9 @@
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
   box-shadow:
-    0 0 0 1px rgba(99, 102, 241, 0.06),
+    0 0 0 1px rgba(29,88,239, 0.06),
     0 4px 6px -1px rgba(15, 23, 42, 0.05),
-    0 20px 40px -8px rgba(99, 102, 241, 0.12);
+    0 20px 40px -8px rgba(29,88,239, 0.12);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -38,14 +38,14 @@
 /* Stripe superior (idéntica a form-card::before) */
 .cv-stripe {
   height: 3px;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  background: linear-gradient(90deg, var(--brand) 0%, var(--brand) 50%, var(--brand) 100%);
   flex-shrink: 0;
 }
 
 /* ── Header ──────────────────────────────────────────────────────────── */
 .cv-header {
   padding: 1rem 1.5rem;
-  background: linear-gradient(160deg, #f8fafc 0%, #fff 100%);
+  background: linear-gradient(160deg, var(--sunken) 0%, #fff 100%);
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
@@ -60,7 +60,7 @@
 }
 
 .cv-icon {
-  background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--brand-soft) 100%);
   color: var(--primary);
   width: 36px;
   height: 36px;
@@ -69,7 +69,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.22);
+  box-shadow: 0 2px 8px rgba(29,88,239, 0.22);
 }
 
 .cv-label {
@@ -94,7 +94,7 @@
 /* ── Cuerpo (Swiper) ───────────────────────────────────────────────────── */
 .cv-body {
   flex: 1;
-  background: #f1f5f9;
+  background: var(--line-2);
   position: relative;  /* necesario para posicionar las flechas */
 }
 
@@ -102,8 +102,8 @@
   width: 100%;
   /* Reducimos la altura máxima en pantallas grandes para que la imagen no sea gigantesca */
   height: clamp(400px, 60vh, 650px);
-  --swiper-pagination-color: #6366f1;
-  --swiper-pagination-bullet-inactive-color: rgba(99, 102, 241, 0.3);
+  --swiper-pagination-color: var(--brand);
+  --swiper-pagination-bullet-inactive-color: rgba(29,88,239, 0.3);
   --swiper-pagination-bullet-inactive-opacity: 1;
 }
 
@@ -117,7 +117,7 @@
   height: 38px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--primary);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(29,88,239, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -133,7 +133,7 @@
   background: var(--primary);
   color: #fff;
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 16px rgba(29,88,239, 0.4);
 }
 
 .cv-nav:disabled {
@@ -153,7 +153,7 @@
   height: 100%;
   cursor: zoom-in;
   overflow: hidden;
-  background-color: #f1f5f9; /* Fondo gris claro para rellenar espacios si la imagen es estrecha */
+  background-color: var(--line-2); /* Fondo gris claro para rellenar espacios si la imagen es estrecha */
 }
 
 .cv-img {
@@ -197,7 +197,7 @@
 
 /* ── Paginación ─────────────────────────────────────────────────────────── */
 .cv-swiper::part(bullet) {
-  background: rgba(99, 102, 241, 0.25);
+  background: rgba(29,88,239, 0.25);
   opacity: 1;
   width: 7px;
   height: 7px;
@@ -332,7 +332,7 @@
   background: var(--primary);
   border-color: transparent;
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(29,88,239, 0.4);
 }
 
 .lb-nav:disabled {
@@ -373,7 +373,7 @@
   cursor: pointer;
   transition: background 0.18s, color 0.18s, transform 0.18s;
   font-size: 0.8rem;
-  font-family: inherit;
+  font-family: var(--font);
   font-weight: 600;
 }
 
@@ -419,7 +419,7 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 4px;
   padding: 1px 5px;
-  font-family: inherit;
+  font-family: var(--font);
   font-size: 0.68rem;
   color: rgba(255, 255, 255, 0.55);
   margin: 0 1px;

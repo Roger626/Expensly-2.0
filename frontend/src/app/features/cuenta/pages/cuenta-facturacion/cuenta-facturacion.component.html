@@ -1,90 +1,77 @@
-<div class="cuenta-container">
-  @if (loading) {
-    <p>Cargando suscripción...</p>
-  } @else if (error) {
-    <p class="error">{{ error }}</p>
-  } @else if (suscripcion) {
-    <div class="subscription-card">
-      <h2>Plan {{ planName }}</h2>
+<header class="ui-page-head">
+  <div>
+    <h1>Facturación</h1>
+    <p>Tu plan, cómo lo pagas y los cobros que ya se hicieron.</p>
+  </div>
+</header>
 
-      <span [class]="estadoClass">{{ suscripcion.estado }}</span>
-
-      @if (suscripcion.estado === 'Trial' && suscripcion.trial_termina_en) {
-        <p class="trial-info">
-          Tu prueba termina el {{ suscripcion.trial_termina_en | date:'mediumDate' }}
-        </p>
-      }
-
-      @if (suscripcion.estado === 'Activa' && suscripcion.current_period_end) {
-        <p class="renewal-info">
-          Próxima renovación: {{ suscripcion.current_period_end | date:'mediumDate' }}
-        </p>
-      }
-
-      @if (suscripcion.display_num) {
-        <p class="card-info">Tarjeta terminada en {{ suscripcion.display_num }}</p>
-      }
-
-      <div class="actions">
-        @if (suscripcion.estado !== 'Cancelada') {
-          <button class="cuenta-btn cuenta-btn-primary" (click)="openUpgradeModal()">
-            Subir a plan
-          </button>
-        }
-        @if (!suscripcion.card_token) {
-          <button class="cuenta-btn cuenta-btn-secondary" (click)="showCardForm = true">
-            Agregar tarjeta
-          </button>
-        }
+@if (error(); as err) {
+  <div class="ui-alert" role="alert"><app-icon name="danger-triangle-linear" /> {{ err }}
+    <button type="button" class="ui-btn ui-btn--sm ui-btn--outline retry" (click)="cargar()">Reintentar</button>
+  </div>
+} @else if (loading()) {
+  <div class="ui-panel plan-skel"><div class="ui-skeleton" style="height: 120px"></div></div>
+} @else if (suscripcion()) {
+  @let s = suscripcion()!;
+  <section class="ui-panel current">
+    <div class="current-main">
+      <div class="current-top">
+        <span class="ui-badge ui-badge--{{ estado().tone }}">{{ estado().label }}</span>
       </div>
+      <h2>Plan {{ plan().nombre }}</h2>
+      <p class="current-for">{{ plan().para }}</p>
+      <ul class="facts">
+        @if (s.estado === 'Trial' && s.trial_termina_en) {
+          <li><app-icon name="hourglass-line-linear" /> La prueba termina el <b>{{ longDate(s.trial_termina_en) }}</b></li>
+        }
+        @if (s.current_period_end) {
+          <li><app-icon name="calendar-linear" /> {{ s.estado === 'Activa' ? 'Se renueva' : 'Periodo hasta' }} el <b>{{ longDate(s.current_period_end) }}</b></li>
+        }
+        <li><app-icon name="card-linear" />
+          @if (s.display_num) { Tarjeta terminada en <b class="num">{{ s.display_num }}</b> } @else { Sin tarjeta registrada }
+        </li>
+      </ul>
     </div>
-
-    @if (showCardForm) {
-      <div class="card-form-section">
-        <h3>Agregar método de pago — Plan {{ selectedPlan }}</h3>
-        <p class="plan-price">${{ planPrice }} USD</p>
-        <p class="redirect-info">
-          Serás redirigido al sitio seguro de Paguelo Fácil para completar el pago.
-        </p>
-        <button
-          class="cuenta-btn cuenta-btn-primary"
-          [disabled]="creatingEnlace"
-          (click)="iniciarPago()"
-        >
-          @if (creatingEnlace) {
-            Creando enlace de pago...
-          } @else {
-            Pagar ${{ planPrice }} USD con tarjeta
-          }
+    <div class="current-side">
+      <p class="price"><span class="cur">$</span>{{ plan().precio }}<span class="per">USD al mes</span></p>
+      @if (puedePagar()) {
+        <button type="button" class="ui-btn ui-btn--primary" (click)="confirmando.set(true)">
+          <app-icon name="card-send-linear" /> Pagar con tarjeta
         </button>
-      </div>
-    }
-  }
-</div>
+        <span class="secure"><app-icon name="shield-check-linear" /> Pago seguro con PagueloFácil</span>
+      } @else {
+        <span class="secure ok"><app-icon name="check-circle-linear" /> Al día</span>
+      }
+    </div>
+  </section>
 
-<!-- Upgrade modal -->
-<app-modal
-  [visible]="showUpgradeModal"
-  title="Cambiar de plan"
-  variant="info"
-  (closed)="cancelUpgrade()"
->
-  <div class="plan-cards">
-    @for (p of ['basic', 'pro', 'premium']; track p) {
-      <div
-        class="plan-card"
-        [class.selected]="selectedPlan === p"
-        (click)="selectPlan($any(p))"
-      >
-        <h4>{{ p === 'basic' ? 'Basic' : p === 'pro' ? 'Pro' : 'Premium' }}</h4>
-        <p class="plan-card-price">
-          {{ getPrice(p) }} / mes
-        </p>
-      </div>
-    }
+  <section class="ui-panel compare" aria-labelledby="cmp-title">
+    <div class="ui-panel__head">
+      <div><h2 id="cmp-title">Planes</h2><p>Todos incluyen lectura de QR, IA, roles, dashboard y exportación a Excel.</p></div>
+      <a class="ui-btn ui-btn--outline ui-btn--sm" [href]="mailCambio()"><app-icon name="letter-linear" /> Pedir cambio de plan</a>
+    </div>
+    <div class="plans">
+      @for (p of planes; track p.key) {
+        <div class="plan" [class.is-current]="p.key === plan().key">
+          <div class="plan-top"><b>{{ p.nombre }}</b>@if (p.key === plan().key) { <span class="ui-badge ui-badge--brand ui-badge--plain">Tu plan</span> }</div>
+          <p class="plan-price num">{{ money(p.precio) }}<span> / mes</span></p>
+          <p class="plan-for">{{ p.para }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <app-historial-pagos [embedded]="true" />
+}
+
+<app-modal [visible]="confirmando()" title="Pagar plan {{ plan().nombre }}" subtitle="Te llevaremos al sitio seguro de PagueloFácil." variant="info" size="sm" (closed)="confirmando.set(false)">
+  <app-icon modal-icon name="card-send-bold-duotone" />
+  <div modal-body>
+    <p class="modal-amount">Total a pagar <b class="num">{{ money(plan().precio) }} USD</b></p>
+    <p class="ui-hint">Al terminar volverás a Expensly y verás el cobro en tu historial.</p>
   </div>
-  <div class="modal-actions">
-    <button class="cuenta-btn cuenta-btn-primary" (click)="confirmUpgrade()">Confirmar</button>
-    <button class="cuenta-btn cuenta-btn-secondary" (click)="cancelUpgrade()">Cancelar</button>
-  </div>
+  <ng-container modal-footer>
+    <button type="button" class="ui-btn ui-btn--ghost" (click)="confirmando.set(false)" [disabled]="creandoEnlace()">Cancelar</button>
+    <button type="button" class="ui-btn ui-btn--primary" (click)="pagar()" [disabled]="creandoEnlace()">{{ creandoEnlace() ? 'Abriendo…' : 'Ir a pagar' }}</button>
+  </ng-container>
 </app-modal>

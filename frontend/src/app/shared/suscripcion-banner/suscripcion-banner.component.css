@@ -1,38 +1,16 @@
-.suscripcion-banner {
-  padding: 0.75rem 1.5rem;
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: 500;
+.banner {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; padding: 10px 10px 10px 14px;
+  border-radius: 12px; font-size: 14px;
+  background: var(--brand-soft); color: var(--brand-deep);
+  --ico-tone: currentColor; --ico-tone-o: .35;
 }
-
-.suscripcion-banner a {
-  text-decoration: underline;
-  font-weight: 600;
-}
-
-.banner-trial {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.banner-trial a {
-  color: #1e40af;
-}
-
-.banner-suspendida {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.banner-suspendida a {
-  color: #991b1b;
-}
-
-.banner-pendientepago {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.banner-pendientepago a {
-  color: #92400e;
-}
+.banner app-icon { width: 22px; height: 22px; }
+.banner p { margin: 0; flex: 1; }
+.banner b { font-weight: 700; }
+.banner .ui-btn { background: var(--surface); color: inherit; border-color: rgba(29,88,239, .2); }
+.banner .ui-btn:hover { background: #fff; border-color: currentColor; }
+.banner[data-estado="Suspendida"] { background: var(--danger-soft); color: #8C1D18; }
+.banner[data-estado="PendientePago"] { background: var(--warn-soft); color: #7A4300; }
+.banner[data-estado="Suspendida"] .ui-btn, .banner[data-estado="PendientePago"] .ui-btn { border-color: currentColor; }
+@media (max-width: 600px) { .banner { flex-wrap: wrap; } }

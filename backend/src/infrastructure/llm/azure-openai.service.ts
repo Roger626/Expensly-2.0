@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { AzureOpenAI } from 'openai';
 import { ILlmService, LlmExtractionResult, CampoFactura, CampoConfianza } from './illm.service';
 import { FacturaProcesamientoResult } from '../../modules/registro-gastos/strategies/factura-procesar.strategy.interface';
@@ -161,7 +161,12 @@ export class AzureOpenAiService implements ILlmService {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       this.logger.error(`Error en extracción LLM (deployment=${deployment}): ${msg}`);
-      throw new InternalServerErrorException(`Error al extraer datos con IA: ${msg}`);
+      // Credenciales o endpoint mal configurados: no es culpa de la foto ni del usuario.
+      const status = (err as { status?: number })?.status;
+      if (status === 401 || status === 403 || status === 404) {
+        throw new ServiceUnavailableException('La lectura con IA no está disponible en este momento. Avisa al administrador del sistema.');
+      }
+      throw new InternalServerErrorException('No se pudieron extraer los datos de la factura con IA.');
     }
   }
 

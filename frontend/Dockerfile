@@ -8,6 +8,7 @@ RUN npm ci
 COPY angular.json tsconfig.json tsconfig.app.json tsconfig.spec.json ./
 COPY src ./src
 COPY public ./public
+COPY scripts ./scripts
 
 RUN npm run build
 

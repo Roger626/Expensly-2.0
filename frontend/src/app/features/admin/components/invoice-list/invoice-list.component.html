@@ -1,132 +1,109 @@
-<div class="invoice-wrapper">
-
-  <!-- Table -->
-  <div class="invoice-table" role="table" aria-label="Tabla de facturas">
-
-    <!-- Header -->
-    <div class="t-row t-header" role="row">
-      <div class="t-cell col-check" role="columnheader">
-        <input
-          type="checkbox"
-          class="cb"
-          [checked]="allSelected"
-          [indeterminate]="someSelected"
-          (change)="toggleAll()"
-          aria-label="Seleccionar todas"
-        >
-      </div>
-      <div class="t-cell col-date" role="columnheader">FECHA <span class="sort-icon">↑</span></div>
-      <div class="t-cell col-employee" role="columnheader">EMPLEADO</div>
-      <div class="t-cell col-cufe" role="columnheader">COMERCIO</div>
-      <div class="t-cell col-category" role="columnheader">CATEGORÍA</div>
-      <div class="t-cell col-total" role="columnheader">TOTAL</div>
-      <div class="t-cell col-status" role="columnheader">ESTADO</div>
-      <div class="t-cell col-actions" role="columnheader"></div>
-    </div>
-
-    <!-- Body -->
-    @for (invoice of invoices; track invoice.facturaId) {
-      <div
-        class="t-row t-body-row"
-        role="row"
-        [class.row-selected]="isSelected(invoice)"
-        tabindex="0"
-        [attr.aria-label]="'Ver detalle de la factura de ' + (invoice.nombreProveedor || 'proveedor')"
-        title="Ver detalle de la factura"
-        (click)="openInvoice.emit(invoice)"
-        (keyup.enter)="openInvoice.emit(invoice)"
-      >
-
-        <!-- Checkbox -->
-        <div class="t-cell col-check" role="cell" (click)="$event.stopPropagation()">
-          <input
-            type="checkbox"
-            class="cb"
-            [checked]="isSelected(invoice)"
-            (change)="toggleSelection(invoice)"
-          >
-        </div>
-
-        <!-- Date -->
-        <div class="t-cell col-date" role="cell">
-          {{ invoice.fechaEmision | date:'MMM d, yyyy' }}
-        </div>
-
-        <!-- Empleado -->
-        <div class="t-cell col-employee" role="cell">
-          <div class="employee">
-            <div class="avatar" [style.background-color]="getAvatarColor(invoice.nombreEmpleado)">
-              {{ getInitials(invoice.nombreEmpleado) }}
+<div class="ui-table-wrap">
+  <table class="ui-table">
+    <thead>
+      <tr>
+        @if (selectable) {
+          <th scope="col" class="col-check">
+            <input type="checkbox" class="cb" [checked]="allSelected" [indeterminate]="someSelected" (change)="toggleAll()"
+                   aria-label="Seleccionar todas las facturas de esta página">
+          </th>
+        }
+        <th scope="col" [attr.aria-sort]="ariaSort('fecha')">
+          <button type="button" class="sort" (click)="sortChange.emit('fecha')">Fecha
+            <app-icon [name]="sort?.key === 'fecha' && sort?.dir === 'asc' ? 'alt-arrow-up-linear' : 'alt-arrow-down-linear'" [class.on]="sort?.key === 'fecha'" />
+          </button>
+        </th>
+        <th scope="col" [attr.aria-sort]="ariaSort('proveedor')">
+          <button type="button" class="sort" (click)="sortChange.emit('proveedor')">Proveedor
+            <app-icon [name]="sort?.key === 'proveedor' && sort?.dir === 'desc' ? 'alt-arrow-down-linear' : 'alt-arrow-up-linear'" [class.on]="sort?.key === 'proveedor'" />
+          </button>
+        </th>
+        @if (showEmployee) { <th scope="col">Empleado</th> }
+        <th scope="col">Categoría</th>
+        <th scope="col" class="num" [attr.aria-sort]="ariaSort('monto')">
+          <button type="button" class="sort sort--end" (click)="sortChange.emit('monto')">Monto
+            <app-icon [name]="sort?.key === 'monto' && sort?.dir === 'asc' ? 'alt-arrow-up-linear' : 'alt-arrow-down-linear'" [class.on]="sort?.key === 'monto'" />
+          </button>
+        </th>
+        <th scope="col">Estado</th>
+        <th scope="col"><span class="sr-only">Abrir</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (inv of invoices; track inv.facturaId) {
+        <tr class="is-clickable" [class.is-selected]="selected.has(inv.facturaId)" (click)="openInvoice.emit(inv)">
+          @if (selectable) {
+            <td class="col-check" (click)="$event.stopPropagation()">
+              <input type="checkbox" class="cb" [checked]="selected.has(inv.facturaId)" (change)="toggle(inv)"
+                     [attr.aria-label]="'Seleccionar factura de ' + (inv.nombreProveedor || 'proveedor')">
+            </td>
+          }
+          <td class="num-date">{{ longDate(inv.fechaEmision) }}</td>
+          <td>
+            <b class="prov">{{ inv.nombreProveedor || 'Proveedor sin nombre' }}</b>
+            <span class="sub">
+              @if (inv.cufe) { <app-icon name="qr-code-linear" class="src" title="Leída del QR de la DGI" /> }
+              N.º {{ inv.numeroFactura }}
+            </span>
+          </td>
+          @if (showEmployee) {
+            <td>
+              <span class="ui-person"><span class="ui-avatar">{{ initials(inv.nombreEmpleado) }}</span><span class="emp">{{ inv.nombreEmpleado || 'Sin empleado' }}</span></span>
+            </td>
+          }
+          <td class="cat">{{ inv.categoria || 'Sin categoría' }}</td>
+          <td class="num"><b>{{ money(inv.montoTotal) }}</b>
+            @if (inv.itbms) { <span class="sub">ITBMS {{ money(inv.itbms) }}</span> }
+          </td>
+          <td>
+            <span class="ui-badge ui-badge--{{ estadoTone(inv.estado) }}">{{ estadoLabel(inv.estado) }}</span>
+            @if (!showEmployee && inv.estado === 'RECHAZADO' && inv.motivoRechazo) { <span class="reason" [title]="inv.motivoRechazo">{{ inv.motivoRechazo }}</span> }
+          </td>
+          <td class="col-open">
+            <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon" (click)="$event.stopPropagation(); openInvoice.emit(inv)"
+                    [attr.aria-label]="'Abrir factura de ' + (inv.nombreProveedor || 'proveedor')">
+              <app-icon name="alt-arrow-right-linear" />
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="colspan">
+            <div class="ui-empty">
+              <app-icon name="inbox-line-bold-duotone" />
+              @if (hasFilters) {
+                <h3>Ninguna factura coincide</h3>
+                <p>Prueba con otro término, amplía las fechas o quita filtros.</p>
+                <button type="button" class="ui-btn ui-btn--outline" (click)="clearFilters.emit()">Quitar filtros</button>
+              } @else {
+                <h3>{{ emptyTitle }}</h3>
+                <p>{{ emptyText }}</p>
+                <ng-content select="[empty-action]" />
+              }
             </div>
-            <span class="employee-name" [title]="invoice.nombreEmpleado ?? ''">{{ invoice.nombreEmpleado ?? '—' }}</span>
-          </div>
-        </div>
-
-        <!-- Proveedor -->
-        <div class="t-cell col-cufe" role="cell">
-          <span class="cufe" [title]="invoice.nombreProveedor">{{ invoice.nombreProveedor }}</span>
-        </div>
-
-        <!-- Category -->
-        <div class="t-cell col-category" role="cell">
-          {{ invoice.categoria ?? '—' }}
-        </div>
-
-        <!-- Total -->
-        <div class="t-cell col-total" role="cell">
-          <strong>{{ invoice.montoTotal | currency:'USD':'symbol':'1.2-2' }}</strong>
-        </div>
-
-        <!-- Status -->
-        <div class="t-cell col-status" role="cell">
-          <span class="status-badge" [ngClass]="getStatusClass(invoice.estado)">
-            {{ getStatusLabel(invoice.estado) }}
-          </span>
-        </div>
-
-        <!-- Actions -->
-        <div class="t-cell col-actions" role="cell" (click)="$event.stopPropagation()">
-          <button class="btn-actions" aria-label="Ver detalle" (click)="openInvoice.emit(invoice)" title="Abrir auditoría">⋮</button>
-        </div>
-
-      </div>
-    } @empty {
-      <div class="empty-state">
-        <p>No se encontraron facturas.</p>
-      </div>
-    }
-
-  </div>
-
-  <!-- Footer -->
-  <div class="table-footer">
-    <span class="results-info">
-      Mostrando {{ startItem }} al {{ endItem }} de {{ totalItems }} resultados
-    </span>
-
-    <div class="pagination">
-      <button
-        class="page-btn"
-        (click)="goToPage(currentPage - 1)"
-        [disabled]="currentPage === 1"
-        aria-label="Página anterior"
-      >&lt;</button>
-
-      @for (page of pageNumbers; track page) {
-        <button
-          class="page-btn"
-          [class.page-active]="page === currentPage"
-          (click)="goToPage(page)"
-        >{{ page }}</button>
+          </td>
+        </tr>
       }
-
-      <button
-        class="page-btn"
-        (click)="goToPage(currentPage + 1)"
-        [disabled]="currentPage === totalPages"
-        aria-label="Página siguiente"
-      >&gt;</button>
-    </div>
-  </div>
-
+    </tbody>
+  </table>
 </div>
+
+@if (totalItems > 0) {
+  <nav class="ui-pager" aria-label="Paginación">
+    <span class="num">{{ startItem }}–{{ endItem }} de {{ totalItems }}</span>
+    <div class="ui-pager__btns">
+      <button type="button" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" aria-label="Página anterior">
+        <app-icon name="alt-arrow-left-linear" />
+      </button>
+      @for (p of pageNumbers; track $index) {
+        @if (p === null) { <span class="gap" aria-hidden="true">…</span> }
+        @else {
+          <button type="button" (click)="goToPage(p)" [attr.aria-current]="p === currentPage ? 'page' : null">{{ p }}</button>
+        }
+      }
+      <button type="button" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" aria-label="Página siguiente">
+        <app-icon name="alt-arrow-right-linear" />
+      </button>
+    </div>
+  </nav>
+}

@@ -1,26 +1,24 @@
-<div class="checkout-callback-container">
-  @if (loading) {
-    <div class="callback-loading">
-      <p>Procesando tu pago...</p>
-      <small>Por favor esperá, estamos confirmando la transacción.</small>
-    </div>
-  } @else if (error) {
-    <div class="callback-error">
-      <p>Error al confirmar el pago</p>
-      <small>{{ error }}</small>
-      <button class="callback-btn" (click)="volver()">Volver a Facturación</button>
-    </div>
-  } @else if (pendiente) {
-    <div class="callback-pending">
-      <p>Pago pendiente</p>
-      <small>Tu pago está siendo procesado. Te notificaremos cuando se confirme.</small>
-      <button class="callback-btn" (click)="volver()">Volver a Facturación</button>
-    </div>
-  } @else if (denegada) {
-    <div class="callback-denied">
-      <p>Pago denegado</p>
-      <small>{{ razon || 'La transacción fue rechazada por el banco emisor.' }}</small>
-      <button class="callback-btn" (click)="volver()">Intentar de nuevo</button>
-    </div>
-  }
-</div>
+<main class="cb">
+  <section class="ui-panel card" role="status" aria-live="polite">
+    @if (loading) {
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Confirmando tu pago</h1>
+      <p>Estamos verificando la transacción con PagueloFácil. No cierres esta ventana.</p>
+    } @else if (error) {
+      <app-icon name="danger-triangle-bold-duotone" class="ico danger" />
+      <h1>No pudimos confirmar el pago</h1>
+      <p>{{ error }} Si se hizo el cargo en tu tarjeta, escríbenos a hola&#64;expensly.com con la fecha y el monto.</p>
+      <button type="button" class="ui-btn ui-btn--primary" (click)="volver()">Volver a facturación</button>
+    } @else if (pendiente) {
+      <app-icon name="hourglass-line-bold-duotone" class="ico warn" />
+      <h1>Pago en proceso</h1>
+      <p>Tu banco aún no confirma el cobro. Lo verás en el historial cuando se apruebe.</p>
+      <button type="button" class="ui-btn ui-btn--primary" (click)="volver()">Volver a facturación</button>
+    } @else if (denegada) {
+      <app-icon name="close-circle-bold-duotone" class="ico danger" />
+      <h1>El pago fue rechazado</h1>
+      <p>{{ razon || 'El banco emisor no autorizó la transacción.' }} Prueba con otra tarjeta.</p>
+      <button type="button" class="ui-btn ui-btn--primary" (click)="volver()">Intentar de nuevo</button>
+    }
+  </section>
+</main>

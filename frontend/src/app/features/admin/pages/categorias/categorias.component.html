@@ -1,0 +1,138 @@
+<header class="ui-page-head">
+  <div>
+    <h1>Categorías</h1>
+    <p>El catálogo con el que tu equipo clasifica cada gasto. El código contable aparece en la exportación a Excel.</p>
+  </div>
+  <div class="ui-page-actions">
+    <button type="button" class="ui-btn ui-btn--primary" (click)="startCreate()" [disabled]="creating()">
+      <app-icon name="add-circle-linear" /> Nueva categoría
+    </button>
+  </div>
+</header>
+
+<section class="ui-panel">
+  <div class="toolbar">
+    <label class="ui-search">
+      <app-icon name="magnifer-linear" />
+      <input class="ui-input" type="search" placeholder="Buscar por nombre o código" aria-label="Buscar categorías"
+             [ngModel]="search()" (ngModelChange)="search.set($event)">
+    </label>
+    <span class="count">{{ store.list().length }} {{ store.list().length === 1 ? 'categoría' : 'categorías' }}</span>
+  </div>
+
+  @if (store.error(); as err) {
+    <div class="ui-alert" role="alert"><app-icon name="danger-triangle-linear" />{{ err }}
+      <button type="button" class="ui-btn ui-btn--sm ui-btn--outline" (click)="store.load()">Reintentar</button>
+    </div>
+  }
+
+  <ng-template #editor let-isNew="isNew">
+    <tr class="editing">
+      <td colspan="5">
+        <form class="editor" (ngSubmit)="save()">
+          <div class="ui-field">
+            <label class="ui-label" for="cat-nombre">Nombre</label>
+            <input id="cat-nombre" class="ui-input" name="nombre" maxlength="100" autocomplete="off" placeholder="Ej. Combustible"
+                   [ngModel]="draft().nombre" (ngModelChange)="patch('nombre', $event)" [attr.aria-invalid]="!!draftError() && draft().nombre.length > 0">
+          </div>
+          <div class="ui-field code">
+            <label class="ui-label" for="cat-codigo">Código contable <span class="opt">opcional</span></label>
+            <input id="cat-codigo" class="ui-input tnum" name="codigo" maxlength="50" autocomplete="off" placeholder="Ej. 6103"
+                   [ngModel]="draft().codigoContable" (ngModelChange)="patch('codigoContable', $event)">
+          </div>
+          <div class="editor-actions">
+            <button type="submit" class="ui-btn ui-btn--primary" [disabled]="!!draftError() || saving()">
+              {{ isNew ? 'Crear categoría' : 'Guardar cambios' }}
+            </button>
+            <button type="button" class="ui-btn ui-btn--ghost" (click)="cancel()">Cancelar</button>
+          </div>
+          @if (draftError() && draft().nombre.length > 0) { <p class="ui-error">{{ draftError() }}</p> }
+        </form>
+      </td>
+    </tr>
+  </ng-template>
+
+  <div class="ui-table-wrap">
+    <table class="ui-table">
+      <thead>
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Código contable</th>
+          <th scope="col" class="num">Facturas</th>
+          <th scope="col" class="num">Gasto acumulado</th>
+          <th scope="col"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (creating()) { <ng-container *ngTemplateOutlet="editor; context: { isNew: true }" /> }
+
+        @for (c of rows(); track c.id) {
+          @if (editingId() === c.id) {
+            <ng-container *ngTemplateOutlet="editor; context: { isNew: false }" />
+          } @else if (deletingId() === c.id) {
+            <tr class="deleting">
+              <td colspan="5">
+                <div class="confirm" role="alert">
+                  <app-icon name="trash-bin-minimalistic-bold-duotone" />
+                  <p>
+                    ¿Eliminar <b>{{ c.nombre }}</b>?
+                    @if (c.count) { Sus {{ c.count }} facturas quedarán sin categoría. } @else { No tiene facturas asociadas. }
+                  </p>
+                  <button type="button" class="ui-btn ui-btn--sm ui-btn--danger-solid" (click)="remove(c)" [disabled]="saving()">Eliminar</button>
+                  <button type="button" class="ui-btn ui-btn--sm ui-btn--ghost" (click)="deletingId.set(null)">Cancelar</button>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            <tr>
+              <td>
+                <span class="name">
+                  <span class="swatch" aria-hidden="true"><app-icon name="tag-bold-duotone" /></span>
+                  <b>{{ c.nombre }}</b>
+                </span>
+              </td>
+              <td>
+                @if (c.codigoContable) { <span class="code-chip num">{{ c.codigoContable }}</span> }
+                @else { <span class="none">Sin código</span> }
+              </td>
+              <td class="num">{{ c.count }}</td>
+              <td class="num"><b>{{ money(c.total) }}</b></td>
+              <td class="actions">
+                <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon" (click)="startEdit(c)" [attr.aria-label]="'Editar ' + c.nombre">
+                  <app-icon name="pen-2-linear" />
+                </button>
+                <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm ui-btn--icon del" (click)="confirmDelete(c)" [attr.aria-label]="'Eliminar ' + c.nombre">
+                  <app-icon name="trash-bin-minimalistic-linear" />
+                </button>
+              </td>
+            </tr>
+          }
+        } @empty {
+          @if (!creating() && !store.loading()) {
+            <tr><td colspan="5">
+              <div class="ui-empty">
+                <app-icon name="tag-bold-duotone" />
+                @if (search()) {
+                  <h3>Sin resultados</h3><p>Ninguna categoría coincide con “{{ search() }}”.</p>
+                } @else {
+                  <h3>Aún no hay categorías</h3>
+                  <p>Crea la primera para que tu equipo pueda clasificar sus gastos.</p>
+                  <button type="button" class="ui-btn ui-btn--primary" (click)="startCreate()">Nueva categoría</button>
+                }
+              </div>
+            </td></tr>
+          }
+        }
+        @if (store.loading() && !rows().length) {
+          @for (i of [1, 2, 3, 4]; track i) {
+            <tr><td colspan="5"><div class="ui-skeleton" style="height: 20px"></div></td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalSinCategoria()) {
+    <p class="foot-note"><app-icon name="info-circle-linear" /> {{ totalSinCategoria() }} facturas no tienen categoría asignada.</p>
+  }
+</section>

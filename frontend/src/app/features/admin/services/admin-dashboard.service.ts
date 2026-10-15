@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import {
+  DashboardCategoria, DashboardFiltros, DashboardResumen, DashboardTendencia,
+} from '../models/dashboard.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminDashboardService {
@@ -9,67 +12,25 @@ export class AdminDashboardService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getDashboardResumen(
-    startDate: string,
-    endDate: string,
-    categoriaId?: string,
-    usuarioId?: string
-  ): Observable<any> {
-    let params = new HttpParams()
-      .set('startDate', startDate)
-      .set('endDate', endDate);
-
-    if (categoriaId) {
-      params = params.set('categoriaId', categoriaId);
-    }
-    if (usuarioId) {
-      params = params.set('usuarioId', usuarioId);
-    }
-
-    return this.http.get<any>(`${this.API}/resumen`, { params });
+  getResumen(f: DashboardFiltros): Observable<DashboardResumen> {
+    return this.http.get<DashboardResumen>(`${this.API}/resumen`, { params: toParams(f) });
   }
 
-  getDashboardTendencia(
-    categoriaId?: string,
-    usuarioId?: string,
-    startDate?: string,
-    endDate?: string
-  ): Observable<any> {
-    let params = new HttpParams();
-
-    if (categoriaId) {
-      params = params.set('categoriaId', categoriaId);
-    }
-    if (usuarioId) {
-      params = params.set('usuarioId', usuarioId);
-    }
-    if (startDate) {
-      params = params.set('startDate', startDate);
-    }
-    if (endDate) {
-      params = params.set('endDate', endDate);
-    }
-
-    return this.http.get<any>(`${this.API}/tendencia-mensual`, { params });
+  getTendencia(f: DashboardFiltros): Observable<DashboardTendencia[]> {
+    return this.http.get<DashboardTendencia[]>(`${this.API}/tendencia-mensual`, { params: toParams(f) });
   }
 
-  getDashboardCategorias(
-    startDate: string,
-    endDate: string,
-    usuarioId?: string
-  ): Observable<any> {
-    let params = new HttpParams()
-      .set('startDate', startDate)
-      .set('endDate', endDate);
-
-    if (usuarioId) {
-      params = params.set('usuarioId', usuarioId);
-    }
-
-    return this.http.get<any>(`${this.API}/categorias`, { params });
+  /** El backend no filtra este endpoint por categoría: se omite a propósito. */
+  getCategorias(f: DashboardFiltros): Observable<DashboardCategoria[]> {
+    return this.http.get<DashboardCategoria[]>(`${this.API}/categorias`, {
+      params: toParams({ ...f, categoriaId: undefined }),
+    });
   }
+}
 
-  getCategorias(orgId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/categorias/organizacion/${orgId}`);
-  }
+function toParams(f: DashboardFiltros): HttpParams {
+  let p = new HttpParams().set('startDate', f.startDate).set('endDate', f.endDate);
+  if (f.categoriaId) p = p.set('categoriaId', f.categoriaId);
+  if (f.usuarioId) p = p.set('usuarioId', f.usuarioId);
+  return p;
 }

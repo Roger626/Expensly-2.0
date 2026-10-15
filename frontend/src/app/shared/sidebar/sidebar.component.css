@@ -12,7 +12,7 @@
   --white: #ffffff;
   
   display: block;
-  font-family: 'Quicksand', sans-serif;
+  font-family: var(--font);
 }
 
 /* --- Contenedor Principal (Azul Expensly) --- */
@@ -115,12 +115,9 @@
 
 /* Removido el ajuste de right en colapsado ya que ahora se mueve automáticamente con el borde exterior de .sidebar_layout */
 
-.toggle-btn lucide-icon {
+.toggle-icon {
   width: 1.125rem; /* 18px */
   height: 1.125rem; /* 18px */
-  stroke-width: 0.1875rem; /* 3px Grosor extra para visibilidad */
-  margin: -.75vh .40vw 0 0;
-
 }
 
 /* --- Links de Navegación --- */
@@ -165,16 +162,17 @@
 }
 
 .nav-links li a.clase-activa .icon {
-  stroke-width: 0.156rem; /* 2.5px */
+  --ico-tone: #ffffff;
+  --ico-tone-o: .4;
   transform: scale(1.1);
 }
 
-/* Iconos de Lucide */
+/* Íconos Solar: lineales en reposo, duotono en el activo */
 .icon {
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
+  width: 1.375rem; /* 22px */
+  height: 1.375rem;
   flex-shrink: 0;
-  stroke: currentColor;
+  transition: transform 0.3s ease;
 }
 
 /* Centrado en modo colapsado */
@@ -200,7 +198,7 @@
   border-radius: 0.875rem; /* 14px */
   background: rgba(255, 255, 255, 0.05);
   color: var(--white);
-  font-family: inherit;
+  font-family: var(--font);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;

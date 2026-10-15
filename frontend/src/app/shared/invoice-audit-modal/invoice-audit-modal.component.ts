@@ -7,7 +7,8 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
+import { initials, longDate, money } from '../format/format';
 import { FormsModule } from '@angular/forms';
 import { FacturaViewComponent } from '../factura-view/factura-view.component';
 import { Factura } from '../../features/registro-factura/models/factura.model';
@@ -24,7 +25,7 @@ export interface AuditRejectEvent {
 @Component({
   selector: 'app-invoice-audit-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, FacturaViewComponent],
+  imports: [FormsModule, FacturaViewComponent, IconComponent],
   templateUrl: './invoice-audit-modal.component.html',
   styleUrl:    './invoice-audit-modal.component.css',
 })
@@ -62,20 +63,27 @@ export class InvoiceAuditModalComponent implements OnChanges {
     return [];
   }
 
-  get statusClass(): string {
-    switch (this.invoice?.estado?.toUpperCase()) {
-      case 'APROBADO':  return 'badge-approved';
-      case 'RECHAZADO': return 'badge-rejected';
-      default:          return 'badge-pending';
-    }
+  readonly money = money;
+  readonly longDate = longDate;
+  readonly initials = initials;
+
+  get estado(): 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' {
+    return this.invoice?.estado ?? 'PENDIENTE';
+  }
+
+  get statusTone(): string {
+    return this.estado === 'APROBADO' ? 'ok' : this.estado === 'RECHAZADO' ? 'danger' : 'warn';
   }
 
   get statusLabel(): string {
-    switch (this.invoice?.estado?.toUpperCase()) {
-      case 'APROBADO':  return 'Aprobado';
-      case 'RECHAZADO': return 'Rechazado';
-      default:          return 'Pendiente Auditoría';
-    }
+    return this.estado === 'APROBADO' ? 'Aprobada' : this.estado === 'RECHAZADO' ? 'Rechazada' : 'Pendiente de revisión';
+  }
+
+  /** El ITBMS esperado es el 7 % del subtotal; si difiere más de 2 ¢ se avisa. */
+  get itbmsDescuadre(): boolean {
+    const f = this.invoice;
+    if (!f?.subtotal || f.itbms == null) return false;
+    return Math.abs(f.subtotal * 0.07 - f.itbms) > 0.02 && Math.abs(f.subtotal + f.itbms - f.montoTotal) > 0.02;
   }
 
   // ─ Lifecycle ──────────────────────────────────────────────────────────────
@@ -168,12 +176,14 @@ export class InvoiceAuditModalComponent implements OnChanges {
   @HostListener('document:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
     if (!this.isOpen) return;
-    if (event.key === 'Escape')     { this.onClose(); return; }
+    if (event.key === 'Escape')     { this.showRejectForm ? this.onCancelReject() : this.onClose(); return; }
+    if ((event.target as HTMLElement)?.tagName === 'TEXTAREA') return;
     if (event.key === 'ArrowLeft')  { this.prev();    return; }
     if (event.key === 'ArrowRight') { this.next();    return; }
     if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
       event.preventDefault();
-      if (!this.showRejectForm) this.onApprove();
+      if (this.showRejectForm) this.onRejectConfirm();
+      else if (this.estado !== 'APROBADO') this.onApprove();
     }
   }
 

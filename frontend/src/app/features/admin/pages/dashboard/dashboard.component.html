@@ -1,278 +1,268 @@
-<div class="page-dashboard">
-  <!-- Suscripción banner -->
-  <app-suscripcion-banner></app-suscripcion-banner>
+<app-suscripcion-banner />
 
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="header-title-block">
-      <div class="header-eyebrow">
-        <span class="header-dot"></span>
-        Panel de Control Analítico
-      </div>
-      <h1 class="page-title">Dashboard Administrativo</h1>
-      <p class="page-subtitle">Resumen ejecutivo y tendencias financieras de la organización</p>
-    </div>
-    <div class="header-refresh-block">
-      @if (lastUpdated()) {
-        <span class="last-updated-text">{{ lastUpdatedLabel() }}</span>
-      }
-      <button class="btn-refresh" (click)="onRefreshClick()" [disabled]="isLoading()" title="Actualizar ahora">
-        <lucide-icon name="refresh-cw" [class.spinning]="isLoading()"></lucide-icon>
-        Actualizar
-      </button>
-    </div>
+<header class="ui-page-head">
+  <div>
+    <h1>Hola{{ userName() ? ', ' + userName() : '' }}</h1>
+    <p>Así va el gasto de tu organización en {{ periodLabel() }}.</p>
+  </div>
+  <div class="ui-page-actions">
+    <span class="updated" aria-live="polite">{{ updatedLabel() }}</span>
+    <button type="button" class="ui-btn ui-btn--outline ui-btn--icon" (click)="refresh()" [disabled]="loading()" aria-label="Actualizar datos">
+      <app-icon name="refresh-linear" [class.spin]="loading()" />
+    </button>
+    <a routerLink="/admin/facturas" class="ui-btn ui-btn--primary">
+      <app-icon name="documents-linear" /> Ver facturas
+    </a>
+  </div>
+</header>
+
+<!-- Filtros -->
+<div class="filters" role="group" aria-label="Filtros del dashboard">
+  <div class="ui-seg" role="group" aria-label="Periodo">
+    @for (p of presets; track p.key) {
+      <button type="button" [attr.aria-pressed]="preset() === p.key" (click)="applyPreset(p.key)">{{ p.label }}</button>
+    }
   </div>
 
-  <!-- Error banner -->
-  @if (loadError()) {
-    <div class="error-banner">
-      <lucide-icon name="alert-triangle"></lucide-icon>
-      <span>{{ loadError() }}</span>
-      <button class="btn-retry" (click)="onRefreshClick()">Reintentar</button>
+  @if (preset() === 'custom') {
+    <div class="range">
+      <input class="ui-input" type="date" aria-label="Desde" [ngModel]="startDate()" (ngModelChange)="setRange('start', $event)" [max]="endDate()">
+      <span aria-hidden="true">a</span>
+      <input class="ui-input" type="date" aria-label="Hasta" [ngModel]="endDate()" (ngModelChange)="setRange('end', $event)" [min]="startDate()">
     </div>
   }
 
-  <!-- Filter Panel -->
-  <div class="filter-panel card-glass">
-    <div class="filter-group">
-      <div class="filter-item">
-        <label for="preset-select">Rango de Fecha</label>
-        <select id="preset-select" class="form-select" [(ngModel)]="preset" (change)="onPresetChange()">
-          <option value="7d">Últimos 7 días</option>
-          <option value="30d">Últimos 30 días</option>
-          <option value="mes">Mes en curso</option>
-          <option value="custom">Rango personalizado</option>
-        </select>
-      </div>
+  <select class="ui-select" aria-label="Categoría" [ngModel]="categoriaId()" (ngModelChange)="setCategoria($event)">
+    <option value="">Todas las categorías</option>
+    @for (c of categorias(); track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+  </select>
 
-      @if (preset === 'custom') {
-        <div class="filter-item date-inputs">
-          <div class="date-field">
-            <label for="start-date">Desde</label>
-            <input type="date" id="start-date" class="form-input" [(ngModel)]="startDate" (change)="onFilterChange()" />
-          </div>
-          <div class="date-field">
-            <label for="end-date">Hasta</label>
-            <input type="date" id="end-date" class="form-input" [(ngModel)]="endDate" (change)="onFilterChange()" />
-          </div>
-        </div>
-      }
+  @if (isAdmin() && empleados().length > 1) {
+    <select class="ui-select" aria-label="Colaborador" [ngModel]="usuarioId()" (ngModelChange)="setUsuario($event)">
+      <option value="">Todo el equipo</option>
+      @for (u of empleados(); track u.id) { <option [value]="u.id">{{ u.nombre }}</option> }
+    </select>
+  }
 
-      <div class="filter-item">
-        <label for="cat-select">Categoría</label>
-        <select id="cat-select" class="form-select" [(ngModel)]="categoriaId" (change)="onFilterChange()">
-          <option value="">Todas las categorías</option>
-          @for (cat of categories; track cat.id) {
-            <option [value]="cat.id">{{ cat.nombre }}</option>
-          }
-        </select>
-      </div>
+  @if (categoriaId() || usuarioId()) {
+    <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" (click)="clearFilters()">
+      <app-icon name="close-circle-linear" /> Quitar filtros
+    </button>
+  }
+</div>
 
-      @if (showEmployeeFilter) {
-        <div class="filter-item">
-          <label for="emp-select">Colaborador</label>
-          <select id="emp-select" class="form-select" [(ngModel)]="usuarioId" (change)="onFilterChange()">
-            <option value="">Todos los colaboradores</option>
-            @for (emp of employees; track emp.id) {
-              <option [value]="emp.id">{{ emp.nombreCompleto || emp.email }}</option>
-            }
-          </select>
-        </div>
+@if (error(); as msg) {
+  <div class="ui-alert" role="alert">
+    <app-icon name="danger-triangle-linear" />
+    <span>{{ msg }}</span>
+    <button type="button" class="ui-btn ui-btn--sm ui-btn--outline retry" (click)="load()">Reintentar</button>
+  </div>
+}
+
+<!-- Estado de cuenta del periodo -->
+<section class="statement ui-panel" [class.is-loading]="loading()" aria-labelledby="st-title">
+  <div class="st-main">
+    <h2 id="st-title" class="st-label">Gasto del periodo</h2>
+    <div class="st-figure">
+      <span class="st-amount num">{{ money(resumen().gastoTotal) }}</span>
+      @if (variacion(resumen().variacionGastoTotal); as v) {
+        <span class="delta" [class.up]="v.up" [class.down]="!v.up">
+          <app-icon [name]="v.up ? 'arrow-right-up-linear' : 'arrow-right-down-linear'" />
+          {{ v.text }} <span class="delta-note">vs. periodo anterior</span>
+        </span>
       }
     </div>
+    <p class="st-note">Sin contar facturas rechazadas.</p>
+
+    <div class="split" role="img"
+         [attr.aria-label]="'Aprobado ' + money(porEstado().rows[0].amount) + ', pendiente ' + money(porEstado().rows[1].amount) + ', rechazado ' + money(porEstado().rows[2].amount)">
+      @for (r of porEstado().rows; track r.key) {
+        @if (r.pct > 0) { <span class="split-seg" [attr.data-tone]="r.tone" [style.flex-grow]="r.pct"></span> }
+      }
+      @if (!porEstado().total) { <span class="split-seg empty"></span> }
+    </div>
+    <ul class="split-legend">
+      @for (r of porEstado().rows; track r.key) {
+        <li>
+          <a [routerLink]="['/admin/facturas']" [queryParams]="{ estado: r.key }">
+            <span class="ui-badge ui-badge--{{ r.tone }}">{{ r.label }}</span>
+            <b class="num">{{ money(r.amount) }}</b>
+            <span class="muted num">{{ r.count }} {{ r.count === 1 ? 'factura' : 'facturas' }}</span>
+          </a>
+        </li>
+      }
+    </ul>
   </div>
 
-  <!-- KPI summary cards -->
-  <div class="kpi-grid">
-    <!-- Card 1: Gasto Total -->
-    <div class="kpi-card card-glass">
-      <div class="kpi-icon icon-spend">
-        <lucide-icon name="credit-card"></lucide-icon>
-      </div>
-      <div class="kpi-content">
-        <div class="kpi-label-row">
-          <div class="kpi-label">Gasto Total</div>
-          @if (summary.variacionGastoTotal !== null && summary.variacionGastoTotal !== undefined) {
-            <span class="kpi-variation" [class.up]="summary.variacionGastoTotal >= 0" [class.down]="summary.variacionGastoTotal < 0">
-              <lucide-icon [name]="summary.variacionGastoTotal >= 0 ? 'trending-up' : 'trending-down'"></lucide-icon>
-              {{ summary.variacionGastoTotal >= 0 ? '+' : '' }}{{ summary.variacionGastoTotal | number:'1.0-1' }}%
-            </span>
-          }
+  <div class="st-side">
+    <div class="fact">
+      <app-icon name="bill-check-bold-duotone" class="fact-ico ok" />
+      <div class="fact-body">
+        <span class="fact-label">ITBMS recuperable</span>
+        <b class="fact-value num">{{ money(resumen().itbmsRecuperable) }}</b>
+        <div class="bullet" role="img" [attr.aria-label]="'Tasa de recuperación ' + resumen().tasaRecuperacion.toFixed(1) + ' % de un máximo de 7 %'">
+          <span class="bullet-fill" [style.width.%]="recuperacionPct()"></span>
+          <span class="bullet-target" title="Máximo: 7 % de ITBMS"></span>
         </div>
-        <div class="kpi-value">${{ summary.gastoTotal | number:'1.2-2' }}</div>
-        <div class="kpi-subtext">vs. periodo anterior</div>
+        <span class="fact-note num">{{ resumen().tasaRecuperacion.toFixed(1) }} % del gasto · tope {{ ITBMS_RATE }} %</span>
       </div>
     </div>
 
-    <!-- Card 2: ITBMS Recuperable -->
-    <div class="kpi-card card-glass">
-      <div class="kpi-icon icon-itbms">
-        <lucide-icon name="receipt"></lucide-icon>
+    <a class="fact fact-link" routerLink="/admin/facturas" [queryParams]="{ estado: 'PENDIENTE' }">
+      <app-icon name="clock-circle-bold-duotone" class="fact-ico warn" />
+      <div class="fact-body">
+        <span class="fact-label">Por aprobar</span>
+        <b class="fact-value num">{{ resumen().aprobacionesPendientes }}</b>
+        <span class="fact-note">
+          @if (resumen().reportesVencidos) {
+            <span class="overdue">{{ resumen().reportesVencidos }} esperan hace más de 48 h</span>
+          } @else { Todas al día }
+        </span>
       </div>
-      <div class="kpi-content">
-        <div class="kpi-label-row">
-          <div class="kpi-label">ITBMS Recuperable</div>
-          @if (summary.variacionItbmsRecuperable !== null && summary.variacionItbmsRecuperable !== undefined) {
-            <span class="kpi-variation" [class.up]="summary.variacionItbmsRecuperable >= 0" [class.down]="summary.variacionItbmsRecuperable < 0">
-              <lucide-icon [name]="summary.variacionItbmsRecuperable >= 0 ? 'trending-up' : 'trending-down'"></lucide-icon>
-              {{ summary.variacionItbmsRecuperable >= 0 ? '+' : '' }}{{ summary.variacionItbmsRecuperable | number:'1.0-1' }}%
-            </span>
-          }
-        </div>
-        <div class="kpi-value">${{ summary.itbmsRecuperable | number:'1.2-2' }}</div>
-        <div class="kpi-subtext">Tasa de rec.: {{ summary.tasaRecuperacion | number:'1.0-2' }}%</div>
-      </div>
-    </div>
-
-    <!-- Card 3: Pendientes -->
-    <div class="kpi-card card-glass">
-      <div class="kpi-icon icon-pending">
-        <lucide-icon name="clock"></lucide-icon>
-      </div>
-      <div class="kpi-content">
-        <div class="kpi-label">Aprobaciones Pendientes</div>
-        <div class="kpi-value">{{ summary.aprobacionesPendientes }}</div>
-        <div class="kpi-subtext">Facturas por verificar</div>
-      </div>
-    </div>
-
-    <!-- Card 4: Reportes Vencidos -->
-    <div class="kpi-card card-glass">
-      <div class="kpi-icon icon-expired">
-        <lucide-icon name="alert-triangle"></lucide-icon>
-      </div>
-      <div class="kpi-content">
-        <div class="kpi-label">Reportes Vencidos</div>
-        <div class="kpi-value text-red">{{ summary.reportesVencidos }}</div>
-        <div class="kpi-subtext">Pendientes por >48 horas</div>
-      </div>
-    </div>
+      <app-icon name="alt-arrow-right-linear" class="fact-go" />
+    </a>
   </div>
+</section>
 
-  <!-- Charts Section -->
-  <div class="charts-grid">
-    <!-- Trend Chart -->
-    <div class="chart-card card-glass">
-      <h3 class="chart-title">Tendencia Mensual</h3>
-      <p class="chart-subtitle">Gasto Total vs ITBMS acumulado en el rango seleccionado</p>
-
-      <div class="chart-container">
-        @if (isLoading() && trendData.length === 0) {
-          <div class="chart-skeleton shimmer"></div>
-        } @else if (trendData.length > 0) {
-          <canvas baseChart
-            [type]="'line'"
-            [data]="trendChartData"
-            [options]="trendChartOptions">
-          </canvas>
-        } @else {
-          <div class="empty-chart">No hay suficientes datos históricos</div>
+<div class="row row--wide">
+  <!-- Tendencia -->
+  <section class="ui-panel" aria-labelledby="tr-title">
+    <div class="ui-panel__head">
+      <div>
+        <h2 id="tr-title">Gasto por mes</h2>
+        <p>Seis meses hasta {{ shortDate(endDate()) }}</p>
+      </div>
+      <ul class="legend" aria-hidden="true">
+        <li><i class="lg-line"></i>Gasto</li>
+        <li><i class="lg-dash"></i>ITBMS</li>
+      </ul>
+    </div>
+    <div class="ui-panel__body">
+      <div class="chart">
+        @if (tendencia().length) {
+          <canvas baseChart type="line" [data]="trendData()" [options]="trendOptions"
+                  role="img" aria-label="Gasto e ITBMS por mes en los últimos seis meses"></canvas>
+        } @else if (!loading()) {
+          <div class="ui-empty"><app-icon name="chart-2-bold-duotone" /><p>Aún no hay facturas en estos meses.</p></div>
         }
       </div>
+    </div>
+  </section>
 
-      <!-- Legend -->
-      <div class="chart-legend">
-        <div class="legend-item">
-          <span class="legend-dot bg-indigo"></span>
-          <span>Gasto Total</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot bg-emerald"></span>
-          <span>ITBMS</span>
-        </div>
+  <!-- Categorías: barras ordenadas -->
+  <section class="ui-panel" aria-labelledby="cat-title">
+    <div class="ui-panel__head">
+      <div>
+        <h2 id="cat-title">Por categoría</h2>
+        <p>Elige una para filtrar el dashboard</p>
       </div>
     </div>
+    <div class="ui-panel__body cats">
+      @for (c of categoriasOrdenadas(); track c.name) {
+        <button type="button" class="cat" [class.is-active]="c.id && c.id === categoriaId()"
+                [disabled]="!c.id" (click)="c.id && setCategoria(c.id)"
+                [attr.aria-pressed]="c.id === categoriaId()">
+          <span class="cat-top">
+            <span class="cat-name">{{ c.name }}</span>
+            <span class="cat-amount num">{{ money(c.montoTotal) }}</span>
+          </span>
+          <span class="cat-track"><span class="cat-bar" [style.width.%]="c.width"></span></span>
+          <span class="cat-meta num">{{ c.count }} {{ c.count === 1 ? 'factura' : 'facturas' }} · {{ c.percentage.toFixed(1) }} %</span>
+        </button>
+      } @empty {
+        @if (!loading()) {
+          <div class="ui-empty"><app-icon name="tag-bold-duotone" /><p>No hay gasto categorizado en este periodo.</p></div>
+        }
+      }
+    </div>
+  </section>
+</div>
 
-    <!-- Category Breakdown Chart -->
-    <div class="chart-card card-glass">
-      <h3 class="chart-title">Desglose por Categorías</h3>
-      <p class="chart-subtitle">Gasto acumulado según clasificación</p>
+<div class="row">
+  <!-- Cola de revisión -->
+  <section class="ui-panel" aria-labelledby="q-title">
+    <div class="ui-panel__head">
+      <div>
+        <h2 id="q-title">Por revisar</h2>
+        <p>Las más antiguas primero</p>
+      </div>
+      <a class="ui-btn ui-btn--ghost ui-btn--sm" routerLink="/admin/facturas" [queryParams]="{ estado: 'PENDIENTE' }">
+        Ver todas <app-icon name="alt-arrow-right-linear" />
+      </a>
+    </div>
 
-      <div class="donut-chart-container">
-        @if (isLoading() && categoriesData.length === 0) {
-          <div class="chart-skeleton shimmer donut-skeleton"></div>
-        } @else if (categoriesData.length > 0) {
-          <div class="donut-svg-wrapper">
-            <canvas baseChart
-              [type]="'doughnut'"
-              [data]="categoryChartData"
-              [options]="categoryChartOptions">
-            </canvas>
-            <div class="donut-center-label">
-              <span class="donut-center-num">{{ summary.gastoTotal | number:'1.0-0' }}</span>
-              <span class="donut-center-text">Total USD</span>
+    <ul class="queue">
+      @for (f of cola(); track f.facturaId) {
+        <li class="q-item" [class.is-busy]="procesandoId() === f.facturaId">
+          <div class="q-row">
+            <span class="ui-avatar">{{ initials(f.nombreEmpleado) }}</span>
+            <div class="q-main">
+              <b>{{ f.nombreProveedor || 'Proveedor sin nombre' }}</b>
+              <span class="q-sub">
+                {{ f.nombreEmpleado || 'Sin empleado' }} ·
+                <span [class.overdue]="vencida(f)">{{ ageLabel(f.fechaEmision) }}</span>
+              </span>
+            </div>
+            <b class="q-amount num">{{ money(f.montoTotal) }}</b>
+            <div class="q-actions">
+              <button type="button" class="ui-btn ui-btn--sm ui-btn--ok" (click)="aprobar(f)" [disabled]="procesandoId() === f.facturaId">
+                <app-icon name="check-circle-linear" /> Aprobar
+              </button>
+              <button type="button" class="ui-btn ui-btn--sm ui-btn--danger ui-btn--icon" (click)="empezarRechazo(f)"
+                      [disabled]="procesandoId() === f.facturaId" [attr.aria-label]="'Rechazar factura de ' + f.nombreProveedor">
+                <app-icon name="close-circle-linear" />
+              </button>
             </div>
           </div>
-
-          <div class="donut-legend">
-            @for (seg of categorySegments; track seg.name) {
-              <div class="donut-legend-row">
-                <div class="donut-legend-info">
-                  <span class="legend-dot" [style.background-color]="seg.color"></span>
-                  <span class="donut-cat-name">{{ seg.name }}</span>
-                </div>
-                <div class="donut-legend-values">
-                  <span class="donut-cat-amount">${{ seg.montoTotal | number:'1.2-2' }}</span>
-                  <span class="donut-cat-pct">({{ seg.percentage }}%)</span>
-                </div>
+          @if (rechazandoId() === f.facturaId) {
+            <form class="q-reject" (ngSubmit)="confirmarRechazo(f)">
+              <label class="ui-label" [for]="'motivo-' + f.facturaId">Motivo del rechazo</label>
+              <div class="q-reject-row">
+                <input class="ui-input" [id]="'motivo-' + f.facturaId" name="motivo" [ngModel]="motivo()" (ngModelChange)="motivo.set($event)"
+                       placeholder="Ej. la factura no corresponde a un gasto de la empresa" autocomplete="off" maxlength="300">
+                <button type="submit" class="ui-btn ui-btn--sm ui-btn--danger-solid" [disabled]="motivo().trim().length < 3">Rechazar</button>
+                <button type="button" class="ui-btn ui-btn--sm ui-btn--ghost" (click)="rechazandoId.set(null)">Cancelar</button>
               </div>
-            }
-          </div>
-        } @else {
-          <div class="empty-chart">No hay datos en el rango seleccionado</div>
-        }
+            </form>
+          }
+        </li>
+      } @empty {
+        <li class="ui-empty">
+          <app-icon name="checklist-minimalistic-bold-duotone" />
+          <h3>Nada pendiente</h3>
+          <p>Cuando un empleado suba una factura en este periodo aparecerá aquí para que la apruebes.</p>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- Actividad reciente -->
+  <section class="ui-panel" aria-labelledby="rc-title">
+    <div class="ui-panel__head">
+      <div>
+        <h2 id="rc-title">Últimas facturas</h2>
+        <p>Las 10 más recientes del periodo</p>
       </div>
     </div>
-  </div>
-
-  <!-- Recent Transactions Section -->
-  <div class="transactions-section card-glass">
-    <div class="section-header-block">
-      <h3 class="section-title">Últimas Transacciones</h3>
-      <p class="section-subtitle">Últimas 10 facturas subidas a la plataforma</p>
-    </div>
-
-    <div class="table-wrapper">
-      <table class="data-table">
+    <div class="ui-table-wrap">
+      <table class="ui-table recent">
         <thead>
-          <tr>
-            <th>Colaborador</th>
-            <th>Categoría</th>
-            <th>Fecha Emisión</th>
-            <th class="text-right">Monto</th>
-            <th>Estado</th>
-          </tr>
+          <tr><th scope="col">Empleado</th><th scope="col">Categoría</th><th scope="col">Fecha</th><th scope="col" class="num">Monto</th><th scope="col">Estado</th></tr>
         </thead>
         <tbody>
-          @for (tx of summary.ultimasTransacciones; track tx.id) {
+          @for (t of resumen().ultimasTransacciones; track t.id) {
             <tr>
-              <td>
-                <div class="colab-cell">
-                  <div class="colab-avatar">{{ getAvatarInitials(tx.empleado) }}</div>
-                  <span class="colab-name">{{ tx.empleado }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="cat-tag">{{ tx.categoria }}</span>
-              </td>
-              <td class="text-slate">{{ tx.fecha | date:'dd/MM/yyyy' }}</td>
-              <td class="text-right font-medium text-dark">${{ tx.montoTotal | number:'1.2-2' }}</td>
-              <td>
-                <span class="badge-status" [ngClass]="getStatusClass(tx.estado)">
-                  {{ tx.estado }}
-                </span>
-              </td>
+              <td><span class="ui-person"><span class="ui-avatar">{{ initials(t.empleado) }}</span><b>{{ t.empleado }}</b></span></td>
+              <td class="muted">{{ t.categoria }}</td>
+              <td class="muted tnum">{{ shortDate(t.fecha) }}</td>
+              <td class="num"><b>{{ money(t.montoTotal) }}</b></td>
+              <td><span class="ui-badge ui-badge--{{ estadoTone(t.estado) }}">{{ estadoLabel(t.estado) }}</span></td>
             </tr>
           } @empty {
-            <tr>
-              <td colspan="5" class="table-empty-row">
-                <lucide-icon name="inbox" class="empty-icon"></lucide-icon>
-                <div class="empty-text">No se encontraron facturas en el rango seleccionado</div>
-              </td>
-            </tr>
+            <tr><td colspan="5"><div class="ui-empty"><app-icon name="inbox-line-bold-duotone" /><p>No hay facturas en este periodo.</p></div></td></tr>
           }
         </tbody>
       </table>
     </div>
-  </div>
+  </section>
 </div>

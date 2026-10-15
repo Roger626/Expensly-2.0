@@ -1,59 +1,34 @@
-<nav class="sidebar_layout" [class.is-collapsed]="isCollapsed">
-  
+<nav class="sidebar_layout" [class.is-collapsed]="isCollapsed" aria-label="Navegación principal">
+
   <div class="nav-logo">
     <div class="logo-group">
       <div class="logo-icon">E</div>
-      <span class="logo-text" *ngIf="!isCollapsed">Expensly</span>
+      @if (!isCollapsed) { <span class="logo-text">Expensly</span> }
     </div>
   </div>
 
-  <button class="toggle-btn" (click)="toggleSidebar()" [title]="isCollapsed ? 'Expandir' : 'Colapsar'">
-    <lucide-icon [name]="isCollapsed ? 'chevron-right' : 'chevron-left'"></lucide-icon>
+  <button class="toggle-btn" type="button" (click)="toggleSidebar()"
+          [attr.aria-label]="isCollapsed ? 'Expandir menú' : 'Contraer menú'" [attr.aria-expanded]="!isCollapsed">
+    <app-icon [name]="isCollapsed ? 'alt-arrow-right-linear' : 'alt-arrow-left-linear'" class="toggle-icon" />
   </button>
 
   <ul class="nav-links">
-    <li>
-      <a routerLink="/admin/dashboard" routerLinkActive="clase-activa" [routerLinkActiveOptions]="{exact: true}" [title]="isCollapsed ? 'Dashboard' : ''">
-        <lucide-icon name="layout-dashboard" class="icon"></lucide-icon>
-        <span class="text" *ngIf="!isCollapsed">Dashboard</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/admin/facturas" routerLinkActive="clase-activa" [routerLinkActiveOptions]="{exact: true}" [title]="isCollapsed ? 'Facturas' : ''">
-        <lucide-icon name="file-text" class="icon"></lucide-icon>
-        <span class="text" *ngIf="!isCollapsed">Facturas</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/admin/facturas/crear" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Nueva Factura' : ''">
-        <lucide-icon name="plus-circle" class="icon"></lucide-icon>
-        <span class="text" *ngIf="!isCollapsed">Nueva Factura</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/admin/usuarios" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Usuarios' : ''">
-        <lucide-icon name="users" class="icon"></lucide-icon>
-        <span class="text" *ngIf="!isCollapsed">Usuarios</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/admin/categorias" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Categorías' : ''">
-        <lucide-icon name="layout-grid" class="icon"></lucide-icon>
-        <span class="text" *ngIf="!isCollapsed">Categorías</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/cuenta/facturacion" routerLinkActive="clase-activa" [title]="isCollapsed ? 'Facturación' : ''">
-        <lucide-icon name="credit-card" class="icon"></lucide-icon>
-        <span class="text" *ngIf="!isCollapsed">Facturación</span>
-      </a>
-    </li>
+    @for (item of items(); track item.link) {
+      <li>
+        <a [routerLink]="item.link" routerLinkActive="clase-activa" #rla="routerLinkActive"
+           [routerLinkActiveOptions]="{ exact: !!item.exact }" [attr.title]="isCollapsed ? item.label : null"
+           [attr.aria-label]="isCollapsed ? item.label : null">
+          <app-icon [name]="rla.isActive ? item.activeIcon : item.icon" class="icon" />
+          @if (!isCollapsed) { <span class="text">{{ item.label }}</span> }
+        </a>
+      </li>
+    }
   </ul>
 
   <div class="user-logout">
-    <button (click)="onLogout()" [title]="isCollapsed ? 'Cerrar Sesión' : ''">
-      <lucide-icon name="log-out" class="icon"></lucide-icon>
-      <span class="text" *ngIf="!isCollapsed">Cerrar Sesión</span>
+    <button type="button" (click)="onLogout()" [attr.title]="isCollapsed ? 'Cerrar sesión' : null" [attr.aria-label]="isCollapsed ? 'Cerrar sesión' : null">
+      <app-icon name="logout-2-linear" class="icon" />
+      @if (!isCollapsed) { <span class="text">Cerrar Sesión</span> }
     </button>
   </div>
 </nav>

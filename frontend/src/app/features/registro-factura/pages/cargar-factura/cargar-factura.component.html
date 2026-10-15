@@ -1,51 +1,62 @@
-<div class="page-cargar-factura">
-    <section class="subir-factura">
-        <app-cargar-archivo
-            (enviarArchivos)="procesarFactura($event)"
-            (archivosDescartados)="limpiarEstadoPadre()">
-        </app-cargar-archivo>
+<header class="ui-page-head">
+  <div>
+    <h1>Subir factura</h1>
+    <p>Sube la foto: leemos el código QR de la DGI o, si no tiene, la IA extrae los datos.</p>
+  </div>
+</header>
 
-        <div *ngIf="isLoading" class="estado-carga">
-            <span class="spinner"></span>
-            <p>{{ loadingMensaje }}</p>
-        </div>
+<ol class="steps" aria-label="Progreso">
+  <li [class.on]="paso >= 1" [class.done]="paso > 1" [attr.aria-current]="paso === 1 ? 'step' : null"><span class="dot">@if (paso > 1) { <app-icon name="check-read-linear" /> } @else { 1 }</span> Fotos</li>
+  <li [class.on]="paso >= 2" [class.done]="paso > 2" [attr.aria-current]="paso === 2 ? 'step' : null"><span class="dot">@if (paso > 2) { <app-icon name="check-read-linear" /> } @else { 2 }</span> Revisar datos</li>
+  <li [class.on]="paso >= 3" [attr.aria-current]="paso === 3 ? 'step' : null"><span class="dot">3</span> Guardada</li>
+</ol>
 
-        <!-- Badge visible solo mientras se carga (QR ya detectado en browser) -->
-        <div *ngIf="isLoading && qrDetectado === true" class="qr-badge qr-badge--found">
-            <span>&#10003; QR detectado</span>
-        </div>
-        <div *ngIf="isLoading && qrDetectado === false" class="qr-badge qr-badge--notfound">
-            <span>No se detecto QR, procesando con IA</span>
-        </div>
+@if (paso === 3 && guardada) {
+  <section class="done ui-panel" role="status">
+    <app-icon name="check-circle-bold-duotone" class="done-ico" />
+    <h2>Factura guardada</h2>
+    <p><b>{{ guardada.proveedor }}</b> por <b class="num">{{ money(guardada.total) }}</b> quedó pendiente de aprobación.</p>
+    <div class="done-actions">
+      <button type="button" class="ui-btn ui-btn--primary" (click)="limpiarEstadoPadre()"><app-icon name="camera-add-linear" /> Subir otra</button>
+      <a class="ui-btn ui-btn--outline" [routerLink]="listaUrl">Ver facturas</a>
+    </div>
+  </section>
+}
 
-        <div *ngIf="errorMensaje" class="estado-error">
-            <p>{{ errorMensaje }}</p>
-        </div>
+<div [hidden]="paso !== 1">
+  <app-cargar-archivo [busy]="isLoading" (enviarArchivos)="procesarFactura($event)" (archivosDescartados)="limpiarEstadoPadre()" />
 
-        @if(resultadoOCR){
-            <section class="Factura-output-section">
-                <div class="factura-output">
+  @if (isLoading) {
+    <ol class="progress ui-panel" aria-live="polite">
+      <li [class.ok]="qrDetectado !== null"><span class="pdot"></span> Buscando el código QR en tu navegador</li>
+      @if (qrDetectado === true) {
+        <li class="active"><span class="pdot"></span> QR encontrado: consultando los datos en la DGI</li>
+      } @else if (qrDetectado === false) {
+        <li class="active"><span class="pdot"></span> Sin QR: la IA está leyendo la foto</li>
+      }
+    </ol>
+  }
 
-                @if(imageUrls.length > 0){
-                    <div class="factura-output__viewer" [class.viewer--lightbox]="isLightboxOpen">
-                        <app-factura-view [imageUrls]="imageUrls" (lightboxChange)="onLightboxChange($event)"></app-factura-view>
-                    </div>
-                }
-
-                <div class="factura-output__form">
-                    <app-factura-form
-                        [invoiceData]="resultadoOCR"
-                        [categorias]="categorias"
-                        [isSaving]="isSaving"
-                        (submitInvoice)="createFactura($event)">
-                    </app-factura-form>
-                </div>
-
-                </div>
-            </section>
-            
-        }
-        
-        
-    </section>
+  @if (errorMensaje && !resultadoOCR) {
+    <div class="ui-alert err" role="alert"><app-icon name="danger-triangle-linear" />
+      <div><b>No pudimos leer la factura.</b> {{ errorMensaje }}</div>
+    </div>
+  }
 </div>
+
+@if (paso === 2 && resultadoOCR) {
+  <section class="review">
+    <div class="viewer ui-panel" [class.viewer--lightbox]="isLightboxOpen">
+      @if (imageUrls.length > 0) {
+        <app-factura-view [imageUrls]="imageUrls" (lightboxChange)="onLightboxChange($event)" />
+      }
+    </div>
+    <app-factura-form
+      [invoiceData]="resultadoOCR"
+      [categorias]="categorias"
+      [isSaving]="isSaving"
+      [origen]="qrDetectado ? 'qr' : 'ia'"
+      (discard)="limpiarEstadoPadre()"
+      (submitInvoice)="createFactura($event)" />
+  </section>
+}

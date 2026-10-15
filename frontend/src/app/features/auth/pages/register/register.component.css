@@ -1,5 +1,5 @@
 :host {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: var(--font);
 }
 
 .container {
@@ -7,7 +7,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f8fafc; /* Fondo neutro */
+  background-color: var(--sunken); /* Fondo neutro */
   padding: 40px 20px;
 }
 
@@ -29,7 +29,7 @@
 
 h1 {
   font-size: 1.8rem;
-  color: #0f172a;
+  color: var(--ink);
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.025em;
@@ -37,7 +37,7 @@ h1 {
 
 .subtitle {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--muted);
   line-height: 1.5;
   margin: 0;
 }
@@ -52,12 +52,12 @@ h1 {
 .register-text {
   text-align: center;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--muted);
   margin: 0.5rem 0;
 }
 
 .register-text a {
-  color: #2563eb;
+  color: var(--brand);
   font-weight: 600;
   text-decoration: none;
 }
@@ -70,7 +70,7 @@ h1 {
 .btn-primary {
   width: 100%;
   padding: 14px;
-  background-color: #1d58ef;
+  background-color: var(--brand);
   color: white;
   border: none;
   border-radius: 8px;
@@ -81,7 +81,7 @@ h1 {
 }
 
 .btn-primary:hover {
-  background-color: #1746c1;
+  background-color: var(--brand-deep);
 }
 
 .btn-primary:active {
@@ -93,7 +93,7 @@ h1 {
   margin-top: 1.5rem;
   text-align: center;
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--faint);
   font-weight: 700;
   letter-spacing: 0.05em;
 }

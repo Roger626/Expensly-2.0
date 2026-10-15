@@ -186,7 +186,8 @@ export class AuthController {
     }
 
     @Post('invite')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('SUPERADMIN')
     @HttpCode(HttpStatus.CREATED)
     async inviteUser(
         @Request() req,

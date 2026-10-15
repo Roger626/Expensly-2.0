@@ -1,9 +1,8 @@
-import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
-import { LucideAngularModule, FileText, PlusCircle, Users, LayoutGrid, LogOut, ChevronRight, ChevronLeft, CreditCard, LayoutDashboard, Receipt, Clock, AlertTriangle, Inbox, RefreshCw, TrendingUp, TrendingDown } from 'lucide-angular';
 
 import { routes } from './app.routes';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
@@ -16,11 +15,5 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([jwtInterceptor])),
     { provide: LOCALE_ID, useValue: 'es' },
-    importProvidersFrom(
-      LucideAngularModule.pick({
-        FileText, PlusCircle, Users, LayoutGrid, LogOut, ChevronRight, ChevronLeft, CreditCard, LayoutDashboard,
-        Receipt, Clock, AlertTriangle, Inbox, RefreshCw, TrendingUp, TrendingDown,
-      })
-    ),
   ]
 };

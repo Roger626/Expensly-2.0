@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
@@ -17,7 +18,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, InputComponent],
+  imports: [IconComponent, CommonModule, RouterLink, ReactiveFormsModule, InputComponent],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.css',
 })

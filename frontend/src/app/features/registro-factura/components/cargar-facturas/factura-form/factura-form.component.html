@@ -1,116 +1,82 @@
-<div class="form-card" *ngIf="invoiceData">
-  <form [formGroup]="facturaForm" (ngSubmit)="onSubmit()">
-    
-    <header class="card-header">
-      <div class="title-with-icon">
-        <span class="magic-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-        </span>
-        <div>
-          <h2>Datos Extraídos</h2>
-          <p style="margin:0; font-size:0.72rem; color: var(--text-subtle); margin-top:2px;">Revisa y confirma la información detectada</p>
-        </div>
+@if (invoiceData) {
+  <form class="form ui-panel" [formGroup]="facturaForm" (ngSubmit)="onSubmit()">
+    <header class="head">
+      <div>
+        <h2>Revisa los datos</h2>
+        <p>
+          @if (origen === 'qr') { Los trajimos de la DGI con el código QR. Solo falta la categoría. }
+          @else { La IA los leyó de la foto. Compáralos con la imagen antes de guardar. }
+        </p>
       </div>
+      <span class="origin" [attr.data-origin]="origen">
+        <app-icon [name]="origen === 'qr' ? 'qr-code-bold-duotone' : 'magic-stick-3-bold-duotone'" />
+        {{ origen === 'qr' ? 'Datos DGI' : 'Leído con IA' }}
+      </span>
     </header>
 
-    <div class="card-content">
-      
-      <section class="form-section">
-        <h3 class="section-subtitle">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-          Detalles del Proveedor
-        </h3>
-        <div class="grid-layout">
-          <app-input 
-            label="Nombre del Comercio" 
-            formControlName="nombreComercio"
-            placeholder="Nombre detectado">
-          </app-input>
-          <div class="ruc-dv-group">
-            <app-input label="RUC" formControlName="ruc" placeholder="Ej: 1234567"></app-input>
-            <app-input label="DV" formControlName="dv" placeholder="00"></app-input>
-          </div>
+    <div class="body">
+      <fieldset>
+        <legend>Proveedor</legend>
+        <app-input label="Nombre del comercio" formControlName="nombreComercio" placeholder="Como aparece en la factura" />
+        <div class="ruc">
+          <app-input label="RUC" formControlName="ruc" placeholder="155704412-2-2021" />
+          <app-input label="DV" formControlName="dv" placeholder="00" />
         </div>
-      </section>
+      </fieldset>
 
-      <section class="form-section">
-        <h3 class="section-subtitle">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          Información del Documento
-        </h3>
-        <div class="grid-layout">
-          <app-input label="Número de Factura" formControlName="numeroFactura"></app-input>
-          <app-input label="Fecha de Emisión" type="date" formControlName="fechaEmision"></app-input>
+      <fieldset>
+        <legend>Documento</legend>
+        <div class="two">
+          <app-input label="N.º de factura" formControlName="numeroFactura" />
+          <app-input label="Fecha de emisión" type="date" formControlName="fechaEmision" />
         </div>
-        <div class="full-width mt-12 cufe-container">
-          <app-input label="CUFE — Código Unico de Factura Electrónica" formControlName="cufe"></app-input>
-            <button type="button" class="copy-icon" (click)="copyCufe()" aria-label="Copiar CUFE">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <div class="cufe">
+          <app-input label="CUFE" formControlName="cufe" placeholder="Solo en facturas electrónicas" />
+          @if (facturaForm.get('cufe')?.value) {
+            <button type="button" class="ui-btn ui-btn--outline ui-btn--icon copy" (click)="copyCufe()" [attr.aria-label]="cufeCopied ? 'CUFE copiado' : 'Copiar CUFE'">
+              <app-icon [name]="cufeCopied ? 'check-circle-linear' : 'copy-linear'" />
             </button>
+          }
         </div>
-      </section>
+      </fieldset>
 
-      <section class="form-section">
-        <h3 class="section-subtitle">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8m4-10v12"/></svg>
-          Finanzas
-        </h3>
-        <div class="financial-container">
-          <div class="financial-grid">
-            <app-input label="Subtotal" type="number" formControlName="subtotal"></app-input>
-            <app-input label="ITBMS (7%)" type="number" formControlName="itbms"></app-input>
-            <div class="total-field">
-              <app-input label="Total" type="number" formControlName="total"></app-input>
-            </div>
-          </div>
+      <fieldset>
+        <legend>Montos</legend>
+        <div class="three">
+          <app-input label="Subtotal" type="number" formControlName="subtotal" />
+          <app-input label="ITBMS (7 %)" type="number" formControlName="itbms" />
+          <div class="total"><app-input label="Total" type="number" formControlName="total" /></div>
         </div>
-      </section>
+        @if (descuadre) {
+          <p class="warn"><app-icon name="danger-triangle-linear" /> Subtotal + ITBMS no da el total. Revisa los montos en la imagen.</p>
+        }
+      </fieldset>
 
-      <section class="form-section last">
-        <h3 class="section-subtitle">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          Clasificación
-        </h3>
-        <div class="custom-select-group">
-          <label class="select-label">Categoría del gasto</label>
-          <select formControlName="categoria" class="modern-select">
-            <option value="" disabled selected>Selecciona una categoría…</option>
-            <option *ngFor="let cat of categorias" [value]="cat.id">{{ cat.nombre }}</option>
+      <fieldset>
+        <legend>Clasificación</legend>
+        <div class="ui-field">
+          <label class="ui-label" for="ff-cat">Categoría del gasto</label>
+          <select id="ff-cat" class="ui-select" formControlName="categoria"
+                  [attr.aria-invalid]="facturaForm.get('categoria')?.touched && facturaForm.get('categoria')?.invalid">
+            <option value="" disabled>Elige una categoría</option>
+            @for (cat of categorias; track cat.id) { <option [value]="cat.id">{{ cat.nombre }}</option> }
           </select>
-          <span *ngIf="facturaForm.get('categoria')?.touched && facturaForm.get('categoria')?.invalid" class="error-text">
-            La categoría es obligatoria
-          </span>
+          @if (facturaForm.get('categoria')?.touched && facturaForm.get('categoria')?.invalid) {
+            <span class="ui-error">Elige una categoría para poder guardar.</span>
+          }
         </div>
-      </section>
+      </fieldset>
 
-      <!-- Motivo de rechazo — solo visible en modo admin (updateInvoice) -->
-      <section class="form-section rejection-section" *ngIf="updateInvoice">
-        <h3 class="section-subtitle rejection-title">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Detalles del Rechazo
-        </h3>
-        <div class="form-field">
-          <label class="select-label">Motivo de rechazo <span class="optional-tag">(requerido al rechazar)</span></label>
-          <textarea
-            formControlName="motivoRechazo"
-            class="rejection-textarea"
-            placeholder="Ej: Monto no coincide, datos del proveedor ilegibles…"
-            rows="3">
-          </textarea>
-        </div>
-      </section>
+      @if (formError) {
+        <div class="ui-alert" role="alert"><app-icon name="danger-triangle-linear" /> {{ formError }}</div>
+      }
     </div>
 
-    <footer class="card-footer">
-      <button type="button" class="btn-discard" (click)="facturaForm.reset()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
-        Descartar
-      </button>
-      <button type="submit" class="btn-submit" [disabled]="isSaving || facturaForm.invalid">
-        <span *ngIf="isSaving" class="spinner-sm"></span>
-        <svg *ngIf="!isSaving" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        {{ isSaving ? 'Guardando...' : 'Confirmar Factura' }}
+    <footer class="foot">
+      <button type="button" class="ui-btn ui-btn--ghost" (click)="discard.emit()">Descartar</button>
+      <button type="submit" class="ui-btn ui-btn--primary" [disabled]="isSaving">
+        <app-icon name="check-circle-linear" /> {{ isSaving ? 'Guardando…' : 'Guardar factura' }}
       </button>
     </footer>
   </form>
-</div>
+}

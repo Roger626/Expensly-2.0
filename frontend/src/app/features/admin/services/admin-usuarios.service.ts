@@ -102,8 +102,11 @@ export class AdminUsuariosService implements IAdminUsuariosService {
     this.http
       .patch<void>(`${this.API}/users/${userId}/status`, { activo })
       .subscribe({
-        next: () => this.loadAll(),
-        error: (err) => this._error$.next(err?.error?.message ?? 'Error al cambiar estado.'),
+        next: () => {
+          this.loadAll();
+          this.toast.success(activo ? 'Usuario activado' : 'Usuario desactivado', activo ? 'Ya puede iniciar sesión.' : 'Ya no podrá iniciar sesión.');
+        },
+        error: (err) => this.toast.error('No se pudo cambiar el estado', err?.error?.message ?? 'Inténtalo de nuevo.'),
       });
   }
 
@@ -113,8 +116,11 @@ export class AdminUsuariosService implements IAdminUsuariosService {
     this.http
       .patch<void>(`${this.API}/users/${userId}/role`, { rol })
       .subscribe({
-        next: () => this.loadAll(),
-        error: (err) => this._error$.next(err?.error?.message ?? 'Error al cambiar rol.'),
+        next: () => {
+          this.loadAll();
+          this.toast.success('Rol actualizado', 'Los permisos cambian en su próximo inicio de sesión.');
+        },
+        error: (err) => this.toast.error('No se pudo cambiar el rol', err?.error?.message ?? 'Inténtalo de nuevo.'),
       });
   }
 
@@ -124,8 +130,11 @@ export class AdminUsuariosService implements IAdminUsuariosService {
     this.http
       .delete<void>(`${this.API}/users/${userId}`)
       .subscribe({
-        next: () => this.loadAll(),
-        error: (err) => this._error$.next(err?.error?.message ?? 'Error al eliminar usuario.'),
+        next: () => {
+          this.loadAll();
+          this.toast.success('Usuario eliminado', 'Sus facturas se conservan para auditoría.');
+        },
+        error: (err) => this.toast.error('No se pudo eliminar', err?.error?.message ?? 'Inténtalo de nuevo.'),
       });
   }
 }

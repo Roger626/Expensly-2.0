@@ -96,7 +96,7 @@ describe('AzureOpenAiService', () => {
       mockCreate.mockRejectedValue(new Error('rate limited'));
       const service = await createService();
 
-      await expect(service.extractFromText('texto')).rejects.toThrow('rate limited');
+      await expect(service.extractFromText('texto')).rejects.toThrow('No se pudieron extraer los datos');
     });
   });
 
