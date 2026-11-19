@@ -23,7 +23,7 @@
 
 @media (max-width: 640px) {
   .dates { flex: 1 1 100%; }
-  .dates .ui-input { flex: 1; width: auto; }
+  .dates .ui-input { flex: 1; width: auto; min-width: 0; }
   .category-dropdown-wrapper, .trigger { width: 100%; max-width: none; }
   .dropdown { left: 0; right: 0; }
 }

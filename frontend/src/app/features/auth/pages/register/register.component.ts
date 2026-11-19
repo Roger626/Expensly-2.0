@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../../shared/icon/icon.component';
 import { Component, OnInit } from '@angular/core';
 import{ReactiveFormsModule, FormGroup, FormBuilder, Validators} from "@angular/forms"
 import { CommonModule } from '@angular/common';
@@ -7,7 +8,7 @@ import { passwordMatchValidator } from '../../../../shared/validators/password.v
 
 @Component({
   selector: 'app-register',
-  imports: [
+  imports: [IconComponent, 
     CommonModule,
     ReactiveFormsModule,
     InputComponent,

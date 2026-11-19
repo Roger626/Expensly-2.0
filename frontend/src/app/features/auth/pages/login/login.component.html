@@ -6,7 +6,7 @@
   <div class="login-card">
     <header class="login-header">
       <h1>Bienvenido de vuelta</h1>
-      <p class="subtitle">Ingrese sus credenciales para gestionar gastos y recuperación de impuestos.</p>
+      <p class="subtitle">Entra para registrar, revisar y aprobar los gastos de tu empresa.</p>
     </header>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
@@ -18,16 +18,16 @@
       }
       
       <app-input 
-        label="Email" 
+        label="Correo electrónico" 
         type="email" 
         placeholder="nombre@empresa.com"
         formControlName="email">
       </app-input>
 
       <div class="input-group">
-        <a class="forgot-link" [routerLink]="['/auth/forgot-password']">¿Olvidó su contraseña?</a>
+        <a class="forgot-link" [routerLink]="['/auth/forgot-password']">¿Olvidaste tu contraseña?</a>
         <app-input 
-          label="Password" 
+          label="Contraseña" 
           type="password" 
           placeholder="••••••••"
           formControlName="password" 
@@ -40,11 +40,11 @@
       </button>
 
       <span class="register-text">
-        ¿No tienes una cuenta? <a [routerLink]="['/auth/onboarding']">Regístra tu organización</a>
+        ¿No tienes una cuenta? <a [routerLink]="['/auth/onboarding']">Registra tu organización</a>
       </span>
 
       <div class="footer-security">
-        <span>🔒 ENCRIPTACIÓN DE GRADO EMPRESARIAL SEGURA</span>
+        <span><app-icon name="shield-check-linear" /> Conexión cifrada. Tus datos y los de tu empresa no se comparten.</span>
       </div>
     </form>
   </div>

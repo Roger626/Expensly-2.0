@@ -28,8 +28,8 @@ export class OnboardingComponent implements OnInit {
 
   // Step info
   public steps = [
-    { number: 1, title: 'Company Details', next: 'Account Setup & Team Invite' },
-    { number: 2, title: 'Account Setup', next: 'Finish' }
+    { number: 1, title: 'datos de la empresa', next: 'tu cuenta de administrador' },
+    { number: 2, title: 'tu cuenta de administrador', next: '' }
   ];
 
   get currentStepInfo() {

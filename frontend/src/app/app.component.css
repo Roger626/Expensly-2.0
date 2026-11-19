@@ -44,3 +44,13 @@ main {
 .with-navbar {
   padding-top: 5rem;
 }
+
+/* Pantallas angostas: el contenido siempre deja espacio solo para el sidebar contraído;
+   si se expande, se superpone en lugar de empujar. */
+@media (max-width: 900px) {
+  .with-sidebar,
+  .with-sidebar.sidebar-collapsed {
+    --sidebar-w: 5.5rem;
+    padding: 1rem 0.875rem 1.5rem;
+  }
+}

@@ -4,7 +4,7 @@
 # Uso: bash scripts/seed-demo.sh
 set -euo pipefail
 
-API_URL="${API_URL:-http://localhost:3001/api}"
+API_URL="${API_URL:-http://localhost:3000/api}"
 PG="docker exec -i expensly-postgres-1 psql -U expensly -d expensly -v ON_ERROR_STOP=1 -q"
 
 # Credenciales SOLO de prueba local

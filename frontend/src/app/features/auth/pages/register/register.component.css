@@ -107,3 +107,5 @@ h1 {
 app-input {
   display: block;
 }
+.footer-security span { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; }
+.footer-security app-icon { width: 16px; height: 16px; color: var(--ok); }

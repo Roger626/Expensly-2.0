@@ -140,11 +140,11 @@ h1 {
 .footer-security {
   margin-top: 1.5rem;
   text-align: center;
-  font-size: 10px;
-  color: var(--faint);
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 12px;
+  color: var(--muted);
 }
+.footer-security span { display: inline-flex; align-items: center; gap: 6px; }
+.footer-security app-icon { width: 16px; height: 16px; color: var(--ok); }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }

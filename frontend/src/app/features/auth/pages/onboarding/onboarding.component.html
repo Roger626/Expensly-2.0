@@ -2,18 +2,17 @@
 <main class="onboarding-layout">
 
     <div class="onboarding-header">
-        <span class="eyebrow">ONBOARDING</span>
         
         <div class="progress-info">
-            <h2>Step {{ currentStep }} of {{ numberSteps }}: {{ currentStepInfo.title }}</h2>
-            <span class="percentage">{{ (currentStep / numberSteps) * 100 }}%</span>
+            <h2>Paso {{ currentStep }} de {{ numberSteps }}: {{ currentStepInfo.title }}</h2>
+            
         </div>
 
         <div class="progress-track">
             <div class="progress-fill" [style.width.%]="(currentStep / numberSteps) * 100"></div>
         </div>
 
-        <p class="next-step" *ngIf="currentStepInfo.next">Next: {{ currentStepInfo.next }}</p>
+        <p class="next-step" *ngIf="currentStepInfo.next">Después: {{ currentStepInfo.next }}</p>
     </div>
 
     <div class="step-form-container">

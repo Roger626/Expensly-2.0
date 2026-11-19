@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, computed, inject } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { IconComponent } from '../icon/icon.component';
 import { IconName } from '../icon/icons.generated';
@@ -30,7 +30,7 @@ const NAV: NavItem[] = [
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   private readonly auth = inject(AuthService);
 
   isCollapsed = false;
@@ -41,6 +41,14 @@ export class SidebarComponent {
     const role = this.auth.userRole() as Role | null;
     return NAV.filter((i) => !i.roles || (role && i.roles.includes(role)));
   });
+
+  /** En pantallas angostas arranca contraído para no aplastar el contenido. */
+  ngOnInit(): void {
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      this.isCollapsed = true;
+      queueMicrotask(() => this.collapsedChange.emit(true));
+    }
+  }
 
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
